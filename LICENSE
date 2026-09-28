@@ -1,0 +1,23 @@
+Source-Available, View-Only License
+
+Copyright (c) 2026 Gal Asulin. All rights reserved.
+
+This repository is published only so that people can study it as a demonstration and benchmark of AI-written software.
+
+1. **Permitted:** you may view and read the source code and assets, and you may run them locally for personal, non-commercial evaluation of the work.
+
+2. **Not permitted:** without prior written permission from the copyright holder, you may not:
+   - sell, sublicense, or use this project or any part of it for any commercial purpose;
+   - redistribute, publish, mirror or re-host this project or any part of it, whether modified or unmodified. A "fork" on a hosting platform, made solely as allowed by that platform's terms of service, is the only exception;
+   - use it in any product, service, game or other distributed work.
+
+3. **Third-party intellectual property:**
+   - This project is an unofficial fan work. Spider-Man and all related names, characters, likenesses, logos and marks are the property of their respective owners, including Marvel, Disney, Sony Interactive Entertainment and Insomniac Games.
+   - No rights in any third-party intellectual property are granted or claimed by this license, and nothing in this license grants any trademark rights.
+   - This license covers only the original code and assets created for this project, and only to the extent that the copyright holder holds rights in them.
+
+4. **Bundled third-party components:**
+   - The fonts in `public/assets/ui/fonts/` are licensed under the SIL Open Font License 1.1; see the accompanying OFL files.
+   - npm dependencies installed via package.json are under their own licenses.
+
+5. **No warranty:** the software is provided "AS IS", without warranty of any kind, express or implied. In no event shall the copyright holder be liable for any claim, damages or other liability arising from, out of or in connection with the software or its use.
