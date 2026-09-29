@@ -66,10 +66,27 @@ The project is by **Gal Asulin** ([@galasulin](https://github.com/galasulin)). T
 
 ## 🦸 Suits
 
-Six suits, recoloured live by a GPU shader (no extra textures, and switching never recompiles). Pick them in **Pause → Suits** or from the start screen.
+**Ten suits**, recoloured live by a GPU shader (no extra textures, and switching never recompiles). Pick them in **Pause → Suits** or from the start screen.
 
-| Suit | Look | Notes |
+<p align="center"><img src="docs/screenshots/suits-lineup.jpg" alt="GalStrike, Israel, Captain America, Iron Man, Classic, Stealth, Scarlet and Symbiote suits" width="100%"/></p>
+<p align="center"><sub>GalStrike · Israel · Captain America · Iron Man — Classic · Stealth · Scarlet · Symbiote (real in-game captures)</sub></p>
+
+| Suit | Look | Emblem / detail |
 |---|---|---|
+| ⚡ **GalStrike Suit** *(new)* | Matte black with **glowing neon-turquoise web lines** | Glowing **lightning bolt**, the signature suit |
+| 🇮🇱 **Israel Suit** *(new)* | Flag white and deep blue | **Star of David** on chest and back |
+| ⭐ **Captain America Suit** *(new)* | Navy and red | White **star** |
+| 🔴 **Iron Man Suit** *(new)* | Hot-rod red and gold metal | Glowing **arc reactor** |
+| **Classic Suit** *(new)* | Bright red and royal blue | Bold black web |
+| **Stealth Suit** *(new)* | Matte graphite | Lenses glow green |
+| **Scarlet Suit** *(new)* | Deep scarlet with black panels | Black spider emblem |
+| **Advanced Suit** | Red / navy / white | The default suit |
+| **Iron Spider** | Crimson and gold armour | Unlocks at level 5 |
+| **Symbiote Suit** | Wet black with a white emblem | Procedural veins, heavy black webs |
+
+The new emblems (lightning bolt, five-point star, Star of David, arc reactor) are signed-distance-field shapes drawn by the shader directly on the character's body, so they stay sharp at any resolution.
+
+---|---|---|
 | **Advanced Suit** | Red / navy / white | The default suit |
 | **Iron Spider** | Crimson and gold armour | Unlocks at level 5 |
 | **Symbiote Suit** | Wet black with a white emblem | Procedural veins, heavy black webs |
@@ -82,6 +99,16 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 ---
 
 ## 🖼️ Screenshots
+
+<p align="center"><img src="docs/screenshots/galstrike-rooftop-night.jpg" alt="The GalStrike suit glowing on a Midtown rooftop at night" width="100%"/></p>
+<p align="center"><sub><b>The GalStrike suit on a Midtown rooftop at night</b> · real in-game capture</sub></p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/gameplay-street.jpg" alt="Street level in Midtown"/><p align="center"><sub><b>Street level · live traffic and crowds</b></sub></p></td>
+    <td width="50%"><img src="docs/screenshots/galstrike-rooftop.jpg" alt="Rooftop in Midtown"/><p align="center"><sub><b>Midtown rooftop · GalStrike suit</b></sub></p></td>
+  </tr>
+</table>
 
 <table>
   <tr>
@@ -104,7 +131,8 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 | Area | Change |
 |---|---|
 | **Start screen** | A GalStrike title screen with a slow cinematic orbit around the hero. Play, Suits and Settings, driven by mouse, keyboard or gamepad. |
-| **New suits** | Israel, Captain America and Iron Man, with new procedural emblems and an emissive arc reactor. |
+| **New suits** | GalStrike (glowing neon web lines), Israel, Captain America, Iron Man, Classic, Stealth and Scarlet, with new procedural emblems and emissive details. |
+| **Gamepad interact** | Hold D-pad Up (or X / Square outside combat) to activate towers and interact. |
 | **Auto quality** | On load the game reads the GPU name and picks a preset (low for integrated GPUs, medium for mid-range and APUs, high for dedicated GPUs). It re-checks on every load, so when the browser moves to the dedicated GPU the preset follows, until you choose one by hand. |
 | **Dynamic resolution** | If frames stay slow for 2 seconds, internal resolution drops in 10% steps (down to 55%), and climbs back when there is headroom. |
 | **Smooth mouse look** | Raw, unaccelerated mouse input (`unadjustedMovement`), plus a filter for the bogus pointer-lock spikes Chrome sometimes sends on Windows, which used to throw the camera around. |
@@ -125,7 +153,7 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 <tr><td>Quick web boost (air)</td><td><kbd>Q</kbd></td><td><kbd>L1</kbd> / <kbd>LB</kbd></td></tr>
 <tr><td>Dive / drop</td><td><kbd>C</kbd> or <kbd>Ctrl</kbd></td><td><kbd>B</kbd> / <kbd>◯</kbd></td></tr>
 <tr><td>Web tightrope (while perched)</td><td><kbd>T</kbd></td><td>—</td></tr>
-<tr><td>Interact (activate tower, hold)</td><td><kbd>F</kbd></td><td>—</td></tr>
+<tr><td>Interact (activate tower, hold)</td><td><kbd>F</kbd></td><td>D-pad <kbd>▲</kbd>, or <kbd>X</kbd> / <kbd>▢</kbd> outside combat</td></tr>
 <tr><td>Pause menu / map</td><td><kbd>Esc</kbd> / <kbd>M</kbd></td><td><kbd>Start</kbd> / <kbd>Select</kbd></td></tr>
 <tr><td>Help overlay</td><td><kbd>H</kbd></td><td>—</td></tr>
 </table>
@@ -227,7 +255,7 @@ galstrike/
 
 ## 🛣️ Roadmap
 
-- [ ] Gamepad binding for *interact* (tower activation)
+- [x] Gamepad binding for *interact* (tower activation)
 - [ ] Touch controls for phones and tablets
 - [ ] More suits and suit abilities
 - [ ] Story missions with objectives and scoring
@@ -241,7 +269,7 @@ galstrike/
 - 🕸️ **תנועה:** סווינג מבוסס פיזיקה, ריצה על קירות, זינוק לנקודות, צלילה וחבל קורים.
 - 🏙️ **עיר שנבנית מקוד:** אלפי בניינים, גגות, פארקים, טיימס סקוור, גשרים, תנועה והולכי רגל.
 - 🎮 **עולם פתוח:** 9 רובעים עם מגדלים להפעלה, נסיעה מהירה ברכבת, פשעים ברחובות, קרבות, XP, עץ כישורים ומצב צילום.
-- 🦸 **6 חליפות**, ביניהן חליפות חדשות: **חליפת ישראל** עם מגן דוד, **Captain America** ו-**Iron Man** עם כור ארק זוהר.
+- 🦸 **10 חליפות**, ביניהן חליפת החתימה **GalStrike** עם קווי ניאון זוהרים, **חליפת ישראל** עם מגן דוד, **Captain America** ו-**Iron Man** עם כור ארק זוהר.
 - ⚡ **ביצועים:** בחירת איכות אוטומטית לפי כרטיס המסך, רזולוציה דינמית, ותנועת מצלמה חלקה (קלט עכבר גולמי).
 
 **▶ [לשחק עכשיו](https://galasulin.github.io/galstrike/)**. מומלץ מחשב עם כרטיס מסך נפרד. הטעינה הראשונה לוקחת כדקה.
