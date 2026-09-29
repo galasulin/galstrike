@@ -1,53 +1,259 @@
-# GalStrike: משחק תלת-ממד של סווינג בעיר, בדפדפן
+<div align="center">
 
-<p align="center">
-  <a href="https://galasulin.github.io/galstrike/"><img src="https://img.shields.io/badge/▶%20Play%20now-live%20demo-e3262f?style=for-the-badge" alt="Play now"/></a>
-  <img src="https://img.shields.io/badge/Three.js-WebGL2-000000?style=for-the-badge&logo=threedotjs&logoColor=white" alt="Three.js"/>
-  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
-  <img src="https://img.shields.io/badge/Claude%20Code-D97757?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code"/>
-</p>
+# GalStrike
 
-**GalStrike** הוא משחק עולם פתוח שרץ בדפדפן. מתנדנדים על קורים מעל מנהטן, רצים על קירות ועוצרים פשעים ברחובות.
+### An open-world 3D web-swinging game that runs in your browser
 
-### ▶ [לשחק עכשיו בדפדפן](https://galasulin.github.io/galstrike/)
-<sub>המשחק כבד מבחינה גרפית ומומלץ כרטיס מסך נפרד. בלפטופ עם שני כרטיסים כדאי להגדיר ל-Chrome להשתמש בכרטיס החזק (NVIDIA Control Panel ואז Manage 3D settings). הטעינה הראשונה לוקחת כדקה.</sub>
+<a href="https://galasulin.github.io/galstrike/"><img src="https://img.shields.io/badge/▶%20PLAY%20NOW-live%20in%20the%20browser-e3262f?style=for-the-badge" alt="Play now"/></a>
 
-פרויקט של **גל אסולין** ([@galasulin](https://github.com/galasulin)). הקוד נכתב באמצעות **Claude** (מודל ה-AI של Anthropic, דרך Claude Code) בהכוונת אדם.
+![Three.js](https://img.shields.io/badge/Three.js-r186-000000?style=flat-square&logo=threedotjs&logoColor=white)
+![WebGL2](https://img.shields.io/badge/WebGL2-990000?style=flat-square&logo=webgl&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2023-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-D97757?style=flat-square&logo=anthropic&logoColor=white)
+![Deploy](https://img.shields.io/github/actions/workflow/status/galasulin/galstrike/pages.yml?style=flat-square&label=GitHub%20Pages)
 
-## מה יש במשחק
-- **תנועה:** סווינג על קורים, ריצה על קירות, זינוק ותנועת "זיפ", עם מנוע פיזיקה ואנימציה מותאם.
-- **העיר:** אי בסגנון מנהטן שנוצר פרוצדורלית, עם אלפי בניינים, גגות, פארקים, טיימס סקוור, גשרים, תנועה והולכי רגל.
-- **גרפיקה:** Three.js (WebGL2) עם צללים, תאורה גלובלית, השתקפויות, bloom ו-motion blur, ומצבי שעות יום (כולל לילה וגשם).
-- **חליפות:** Advanced, Iron Spider ו-Symbiote, ובנוסף **חליפת ישראל**, **Captain America** ו-**Iron Man**.
-- **תפריט פתיחה**, ובחירת איכות גרפיקה אוטומטית לפי כרטיס המסך, עם רזולוציה דינמית כדי שהמשחק לא ייתקע.
+<img src="public/assets/loading/01.webp" alt="Swinging through Midtown at golden hour" width="100%"/>
 
-## איך מריצים
-צריך Node.js בגרסה 20.19 ומעלה או 22.12 ומעלה, ודפדפן שתומך ב-WebGL2. מומלץ כרטיס מסך נפרד.
+**Swing across a procedural Manhattan, run up skyscrapers, stop street crimes and fight gangs, all in a browser tab.**<br/>
+No install, no plugins: about 51,000 lines of hand-structured JavaScript on top of Three.js.
+
+[**Play**](https://galasulin.github.io/galstrike/) · [Features](#-features) · [Screenshots](#%EF%B8%8F-screenshots) · [Controls](#-controls) · [Run locally](#-run-locally) · [Architecture](#%EF%B8%8F-architecture) · [עברית](#-בעברית)
+
+</div>
+
+---
+
+## 📖 About
+
+**GalStrike** is a real-time 3D action game in the browser. You traverse a Manhattan-style island built at load time from code: thousands of buildings, dressed rooftops, parks, Times Square, bridges, live traffic and crowds. On top of the traversal there is an open-world layer (research towers, districts, fast travel, collectibles, XP and a skill tree) and a melee combat system.
+
+The project is by **Gal Asulin** ([@galasulin](https://github.com/galasulin)). The code was written with **Claude** (Anthropic's AI model, working through Claude Code) under human direction, which is also what the project demonstrates: how far agentic AI development can go on a large, performance-critical codebase.
+
+> [!TIP]
+> **Best experience:** desktop Chrome or Edge with a dedicated GPU. On a laptop with two GPUs, set Chrome to the high-performance GPU (NVIDIA Control Panel → *Manage 3D settings* → *Program Settings* → Chrome → *High-performance NVIDIA processor*). The first load takes about a minute: the city is generated on your machine.
+
+---
+
+## ✨ Features
+
+### 🕸️ Traversal
+- **Physics-based web-swinging** with release-and-launch, chained swings and momentum carried between them.
+- **Wall-running, perching and parkour.** Stick to any facade, run up it, hop off it into a swing.
+- **Web-zip and point-launch** to highlighted anchor points, plus air web-dash, quick web boost and head-first dives.
+- **Web tightrope and web slingshot** for special movement.
+- A **custom animation state machine** (skeleton, gait, clips and pose layers) drives a fully rigged character.
+
+### 🏙️ A procedural city
+- A **Manhattan-style island** with an authored street grid: Broadway, Greenwich Village, the Financial District, Central Park and Harlem.
+- **Thousands of buildings** with facades, dressed rooftops (water towers, HVAC, gardens, antennas), shop fronts, awnings and signage.
+- **Landmarks:** Times Square with LED screens and billboards, Grand Central, bridges and a waterfront with far shores.
+- **Living streets:** traffic with junction logic, pedestrian crowds and pigeons.
+
+### 🎮 Open-world gameplay
+- **9 districts**, each with a **research tower** to activate. Activating one reveals the district on the map and unlocks its subway station for **fast travel**.
+- **Street crimes** (muggings, bank alarms, car chases) spawn around you.
+- **Melee combat** against three enemy types (melee, gunman and brute), with combos, dodges, web attacks, throws and finishers.
+- **Progression:** XP, levels, a skill tree, collectibles (backpacks), landmarks and a **photo mode** with filters and stickers.
+- **Saved progress** in the browser, a full **pause menu** (map, suits, skills, collectibles, settings) and a **developer menu** (`~`).
+
+### 🎨 Rendering
+- **Three.js WebGL2** with a custom post-processing pipeline: cascaded shadow maps (up to 5 cascades), SSAO, screen-space GI, screen-space reflections, bloom, TAA, depth of field, motion blur and light shafts.
+- **Time-of-day presets** (morning, sunrise, day, sunset, dusk, night and overcast) plus **rain**, with wet streets and puddles.
+- **Procedural sky and clouds**, atmospheric fog out to the horizon, and glass that mirrors the city.
+
+---
+
+## 🦸 Suits
+
+Six suits, recoloured live by a GPU shader (no extra textures, and switching never recompiles). Pick them in **Pause → Suits** or from the start screen.
+
+| Suit | Look | Notes |
+|---|---|---|
+| **Advanced Suit** | Red / navy / white | The default suit |
+| **Iron Spider** | Crimson and gold armour | Unlocks at level 5 |
+| **Symbiote Suit** | Wet black with a white emblem | Procedural veins, heavy black webs |
+| 🇮🇱 **Israel Suit** | Flag white and deep blue | **Star of David** emblem on chest and back *(new in GalStrike)* |
+| ⭐ **Captain America Suit** | Navy and red | White **star** emblem *(new in GalStrike)* |
+| 🔴 **Iron Man Suit** | Hot-rod red and gold metal | Glowing **arc reactor** *(new in GalStrike)* |
+
+The new emblems (five-point star, Star of David, arc reactor) are signed-distance-field shapes drawn by the shader on the character's body, so they stay sharp at any resolution.
+
+---
+
+## 🖼️ Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="public/assets/loading/02.webp" alt="Times Square at night"/><p align="center"><sub><b>Times Square · night</b></sub></p></td>
+    <td width="50%"><img src="public/assets/loading/03.webp" alt="Brooklyn Bridge at sunrise"/><p align="center"><sub><b>Brooklyn Bridge · sunrise</b></sub></p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="public/assets/loading/04.webp" alt="Central Park in the morning"/><p align="center"><sub><b>Central Park · morning</b></sub></p></td>
+    <td width="50%"><img src="public/assets/loading/05.webp" alt="Midtown at noon"/><p align="center"><sub><b>Midtown · noon</b></sub></p></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="public/assets/loading/06.webp" alt="East River at dusk"/><p align="center"><sub><b>East River · dusk</b></sub></p></td>
+  </tr>
+</table>
+
+---
+
+## ⚡ What GalStrike adds
+
+| Area | Change |
+|---|---|
+| **Start screen** | A GalStrike title screen with a slow cinematic orbit around the hero. Play, Suits and Settings, driven by mouse, keyboard or gamepad. |
+| **New suits** | Israel, Captain America and Iron Man, with new procedural emblems and an emissive arc reactor. |
+| **Auto quality** | On load the game reads the GPU name and picks a preset (low for integrated GPUs, medium for mid-range and APUs, high for dedicated GPUs). It re-checks on every load, so when the browser moves to the dedicated GPU the preset follows, until you choose one by hand. |
+| **Dynamic resolution** | If frames stay slow for 2 seconds, internal resolution drops in 10% steps (down to 55%), and climbs back when there is headroom. |
+| **Smooth mouse look** | Raw, unaccelerated mouse input (`unadjustedMovement`), plus a filter for the bogus pointer-lock spikes Chrome sometimes sends on Windows, which used to throw the camera around. |
+| **Live demo** | Asset URLs are base-path aware, and a GitHub Actions workflow builds and deploys to GitHub Pages on every push. |
+
+---
+
+## 🎮 Controls
+
+<table>
+<tr><th>Action</th><th>⌨️ Keyboard and mouse</th><th>🎮 Gamepad (Xbox / PlayStation)</th></tr>
+<tr><td>Move</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Left stick</td></tr>
+<tr><td>Camera</td><td>Mouse (click the game to capture it)</td><td>Right stick</td></tr>
+<tr><td>Web-swing (hold)</td><td>Right mouse button</td><td><kbd>R2</kbd> / <kbd>RT</kbd> (in the air)</td></tr>
+<tr><td>Jump (hold = charged jump)</td><td><kbd>Space</kbd></td><td><kbd>A</kbd> / <kbd>✕</kbd></td></tr>
+<tr><td>Parkour and wall-run</td><td><kbd>Shift</kbd></td><td><kbd>R2</kbd> on the ground or on walls</td></tr>
+<tr><td>Web-zip / point-launch</td><td><kbd>E</kbd> or middle mouse button</td><td><kbd>L2</kbd> + <kbd>R2</kbd>, or <kbd>Y</kbd> / <kbd>△</kbd></td></tr>
+<tr><td>Quick web boost (air)</td><td><kbd>Q</kbd></td><td><kbd>L1</kbd> / <kbd>LB</kbd></td></tr>
+<tr><td>Dive / drop</td><td><kbd>C</kbd> or <kbd>Ctrl</kbd></td><td><kbd>B</kbd> / <kbd>◯</kbd></td></tr>
+<tr><td>Web tightrope (while perched)</td><td><kbd>T</kbd></td><td>—</td></tr>
+<tr><td>Interact (activate tower, hold)</td><td><kbd>F</kbd></td><td>—</td></tr>
+<tr><td>Pause menu / map</td><td><kbd>Esc</kbd> / <kbd>M</kbd></td><td><kbd>Start</kbd> / <kbd>Select</kbd></td></tr>
+<tr><td>Help overlay</td><td><kbd>H</kbd></td><td>—</td></tr>
+</table>
+
+> [!NOTE]
+> **Gamepad:** connect it before opening the game, then press any button. Browsers only expose a controller after its first input.
+
+---
+
+## 🚀 Run locally
+
+**Requirements:** [Node.js](https://nodejs.org) 20.19+ or 22.12+, and a WebGL2 browser (desktop Chrome or Edge recommended).
 
 ```bash
+git clone https://github.com/galasulin/galstrike.git
+cd galstrike
 npm install
-npm run dev      # ואז לפתוח http://127.0.0.1:5173
-npm run build    # בנייה לפרודקשן לתיקייה dist/
+npm run dev        # http://127.0.0.1:5173
 ```
 
-## שליטה
-- **מקלדת ועכבר:**
-  - WASD: תזוזה
-  - עכבר: מצלמה
-  - לחצן ימני או R: סווינג
-  - Space: קפיצה
-  - Shift: ריצה על קירות
-  - E: זיפ
-  - H: מסך עזרה
-  - Esc: תפריט
-- **שלט (Xbox או PlayStation):**
-  - סטיק שמאלי: תזוזה
-  - סטיק ימני: מצלמה
-  - R2: סווינג
-  - A: קפיצה
-  - Start: תפריט
+```bash
+npm run build      # production build in dist/
+npm run preview    # serve the build on http://127.0.0.1:4173
+```
 
-## הבהרה
-פרויקט מעריצים לא רשמי ולא מסחרי, להדגמה טכנית בלבד. הוא לא קשור ל-Marvel, Disney, Sony או Insomniac Games, והן לא אישרו או מימנו אותו. Spider-Man, Captain America, Iron Man והשמות, הדמויות והמראה שקשורים אליהם הם סימנים מסחריים וחומר מוגן בזכויות יוצרים של בעליהם, ואין כאן שום טענה לזכויות בהם. הפונטים המצורפים זמינים תחת רישיון SIL Open Font License (ראו `public/assets/ui/fonts/`).
+<details>
+<summary><b>Useful URL parameters</b></summary>
 
-ראו [LICENSE](LICENSE).
+| Parameter | Effect |
+|---|---|
+| `?q=low` · `?q=med` · `?q=high` | Force a graphics preset |
+| `?notitle` | Skip the start screen |
+| `?nodynres` | Turn off dynamic resolution |
+| `?newgame` | Wipe the saved progress |
+| `?fresh` | Don't restore the last player position |
+| `?dev` | Enable the developer menu (`~`) on a production build |
+
+</details>
+
+<details>
+<summary><b>Troubleshooting</b></summary>
+
+- **Black screen or very low FPS:** open `chrome://gpu` and check `GL_RENDERER`. If it says Intel on a laptop with an NVIDIA or AMD GPU, switch Chrome to the high-performance GPU (see the tip above), then fully restart Chrome.
+- **Camera too fast:** Pause → Settings → Mouse Sensitivity, or lower your mouse DPI to 800–1600.
+- **Stutters:** lower Pause → Settings → Render Resolution, or pick the Low preset.
+
+</details>
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+  subgraph Boot
+    HTML[index.html<br/>loading screen] --> MAIN[src/main.js]
+  end
+  MAIN --> WORLD[world/<br/>procedural city · traffic · crowds]
+  MAIN --> PLAYER[player/<br/>traversal · animation · webs]
+  MAIN --> RENDER[render/<br/>pipeline · shadows · sky · lighting]
+  MAIN --> SYS[game/systems/<br/>towers · crimes · suits · save · audio]
+  MAIN --> COMBAT[game/combat/<br/>enemies · moves · FX]
+  SYS --> UI[ui/<br/>HUD · pause menu · start screen]
+  MAIN -. each frame .-> LOOP((player → world → lighting<br/>→ HUD → systems → render))
+```
+
+| Module | Lines | What it does |
+|---|---:|---|
+| `src/world/` | ~30,600 | City layout, buildings, facades, rooftops, Times Square, parks, bridges, waterfront, signage, traffic and crowds |
+| `src/player/` | ~8,300 | Traversal state machine, rope physics, web visuals, camera, animation rig and gait |
+| `src/game/` | ~5,800 | Open-world systems (towers, crimes, suits, progression, save, audio, photo mode) and combat |
+| `src/render/` | ~3,800 | Post-processing pipeline, cascaded shadows, sky and clouds, time of day, quality presets |
+| `src/ui/` | ~1,900 | HUD, minimap, pause-menu pages and the start screen |
+
+**126 source files · about 51,000 lines of JavaScript · about 140 MB of assets** (models, textures, audio and fonts).
+
+<details>
+<summary><b>Project layout</b></summary>
+
+```text
+galstrike/
+├─ index.html                 # loading screen + entry
+├─ vite.config.js             # base path switch for GitHub Pages
+├─ public/assets/             # character / enemy models, city textures, audio, fonts, loading stills
+├─ src/
+│  ├─ main.js                 # renderer, scene, main loop, dynamic resolution
+│  ├─ world/                  # procedural Manhattan (city, buildings, rooftops, npc/ …)
+│  ├─ player/                 # traversal/, anim/, input, camera, webs
+│  ├─ render/                 # pipeline, csm, sky, lighting, quality
+│  ├─ game/systems/           # towers, crimes, suits, progression, save, audio …
+│  ├─ game/combat/            # combat loop, enemies, moves, FX
+│  └─ ui/                     # hud, menus/ (pause, map, suits, settings, title)
+└─ .github/workflows/pages.yml
+```
+
+</details>
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] Gamepad binding for *interact* (tower activation)
+- [ ] Touch controls for phones and tablets
+- [ ] More suits and suit abilities
+- [ ] Story missions with objectives and scoring
+
+---
+
+## 🇮🇱 בעברית
+
+**GalStrike** הוא משחק תלת-ממד בעולם פתוח שרץ ישירות בדפדפן: מתנדנדים על קורים מעל מנהטן, רצים על גורדי שחקים, עוצרים פשעים ברחובות ונלחמים בכנופיות. בלי התקנה.
+
+- 🕸️ **תנועה:** סווינג מבוסס פיזיקה, ריצה על קירות, זינוק לנקודות, צלילה וחבל קורים.
+- 🏙️ **עיר שנבנית מקוד:** אלפי בניינים, גגות, פארקים, טיימס סקוור, גשרים, תנועה והולכי רגל.
+- 🎮 **עולם פתוח:** 9 רובעים עם מגדלים להפעלה, נסיעה מהירה ברכבת, פשעים ברחובות, קרבות, XP, עץ כישורים ומצב צילום.
+- 🦸 **6 חליפות**, ביניהן חליפות חדשות: **חליפת ישראל** עם מגן דוד, **Captain America** ו-**Iron Man** עם כור ארק זוהר.
+- ⚡ **ביצועים:** בחירת איכות אוטומטית לפי כרטיס המסך, רזולוציה דינמית, ותנועת מצלמה חלקה (קלט עכבר גולמי).
+
+**▶ [לשחק עכשיו](https://galasulin.github.io/galstrike/)**. מומלץ מחשב עם כרטיס מסך נפרד. הטעינה הראשונה לוקחת כדקה.
+
+פרויקט של **גל אסולין**. הקוד נכתב באמצעות **Claude** (Claude Code) בהכוונת אדם.
+
+---
+
+## ⚖️ License and disclaimer
+
+Source-available, view-only. See [LICENSE](LICENSE). No commercial use or redistribution without written permission.
+
+This is an **unofficial, non-commercial fan project**, made only as a technical demonstration. It is not affiliated with, endorsed by or sponsored by Marvel, Disney, Sony or Insomniac Games. Spider-Man, Captain America, Iron Man and all related names, characters and likenesses are trademarks and copyrighted material of their respective owners, and no rights to them are claimed. The bundled fonts are licensed under the SIL Open Font License (see `public/assets/ui/fonts/`).
+
+<div align="center"><sub>Made by <a href="https://github.com/galasulin">Gal Asulin</a> · Built with Claude Code</sub></div>
