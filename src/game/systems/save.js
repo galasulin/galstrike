@@ -19,6 +19,7 @@ export function defaultState() {
     towers: [], stations: [], backpacks: [], landmarks: [], secretPhotos: [], photoThumbs: {},
     crimes: { stopped: 0, byType: {}, byDistrict: {} },
     missions: { done: [], best: {}, total: 0 }, // story missions (missions.js): best = { [id]: { score, rank, time } }
+    achievements: { unlocked: {}, stats: {}, records: {} }, // achievements.js fills in the counters (old saves get them on load)
     waypoint: null, player: null, playTime: 0,
     settings: { ...DEFAULT_SETTINGS },
   };
@@ -35,7 +36,7 @@ export function createSave() {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (s && s.v === 1) state = { ...defaultState(), ...s, settings: { ...DEFAULT_SETTINGS, ...(s.settings || {}) }, crimes: { ...defaultState().crimes, ...(s.crimes || {}) }, missions: { ...defaultState().missions, ...(s.missions || {}) } };
+        if (s && s.v === 1) state = { ...defaultState(), ...s, settings: { ...DEFAULT_SETTINGS, ...(s.settings || {}) }, crimes: { ...defaultState().crimes, ...(s.crimes || {}) }, missions: { ...defaultState().missions, ...(s.missions || {}) }, achievements: { ...defaultState().achievements, ...(s.achievements || {}) } };
       }
     } catch (e) { console.warn('[save] could not read save, starting fresh', e); }
   }

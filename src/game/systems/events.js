@@ -15,6 +15,7 @@
 //   player:thwip {hand}   player:land {severity}   (derived from traversal state; used by audio/NPC reactions)
 //   combat:enemyDown {type, how, crime, combo}   player:hurt {dmg, heavy, by}   player:defeated {crime}   <- emitted BY combat
 //   mission:start {id}   mission:objective {id, index, type}   mission:complete {id, score, rank}   mission:failed {id, reason}   mission:abandon {id}
+//   mission:race {id, index, time} (a race objective finished)   achievement:unlocked {id, title}
 const handlers = new Map();
 
 export function on(type, fn) {

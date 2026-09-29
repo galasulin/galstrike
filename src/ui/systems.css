@@ -511,6 +511,57 @@ input[type=range].sys-range::-moz-range-thumb { width: 12px; height: 18px; backg
 .sys-mpage .hint { font-size: 13px; color: var(--sys-dim); }
 body.ui-minimal #sys-root > .sys-mis { display: none !important; }
 
+/* ------------------------------------------------------------------ ACHIEVEMENTS: unlock toast, pause page (cards + records) */
+.sys-toast.ach { border-left-color: var(--sys-gold); background: linear-gradient(90deg, rgba(245,184,46,.30), rgba(9,17,42,.86) 55%); box-shadow: 0 0 22px rgba(245,184,46,.22); }
+.sys-toast.ach h4 { color: var(--sys-gold); }
+.sys-toast.ach p { color: #fff; font-weight: 700; }
+.sys-ach .side { width: 320px; padding: 20px 22px; align-self: stretch; max-height: 100%; box-sizing: border-box; }
+.sys-ach .sum .big { display: flex; align-items: baseline; gap: 8px; }
+.sys-ach .sum .big b { font: 800 56px/1 var(--sys-head); color: var(--sys-gold); text-shadow: 0 0 18px rgba(245,184,46,.35); }
+.sys-ach .sum .big small { font: 700 24px var(--sys-head); color: var(--sys-soft); letter-spacing: .08em; }
+.sys-ach .sum .bar, .sys-achc .pr .bar { height: 5px; background: rgba(255,255,255,.14); transform: skewX(-20deg); margin: 10px 0 8px; overflow: hidden; }
+.sys-ach .sum .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--sys-red), var(--sys-gold)); }
+.sys-ach .sum .lbl { font: 700 12px var(--sys-head); letter-spacing: .2em; text-transform: uppercase; color: var(--sys-dim); }
+.sys-ach .recs .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(160,188,255,.1); }
+.sys-ach .recs .row span { font: 600 13px var(--sys-head); letter-spacing: .12em; text-transform: uppercase; color: var(--sys-soft); }
+.sys-ach .recs .row b { font: 800 16px var(--sys-head); letter-spacing: .06em; white-space: nowrap; }
+.sys-ach .main .hd .pc small { font-size: 18px; }
+.sys-ach .grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+.sys-achc { display: flex; gap: 14px; align-items: flex-start; padding: 12px 14px; background: rgba(255,255,255,.035); border: 1px solid rgba(160,188,255,.14); border-left: 3px solid rgba(160,188,255,.25);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.sys-achc.on { border-color: rgba(245,184,46,.45); border-left-color: var(--sys-gold); background: linear-gradient(100deg, rgba(245,184,46,.16), rgba(245,184,46,.02) 60%); }
+.sys-achc .bd svg { display: block; width: 46px; height: 46px; }
+.sys-achc.on .bd svg { filter: drop-shadow(0 0 8px rgba(245,184,46,.45)); }
+.sys-achc .tx { flex: 1; min-width: 0; }
+.sys-achc b { display: block; font: 800 17px/1.1 var(--sys-head); letter-spacing: .1em; text-transform: uppercase; }
+.sys-achc.on b { color: var(--sys-gold); }
+.sys-achc.off b { color: #dfe6f7; } .sys-achc.hid b { color: var(--sys-dim); letter-spacing: .3em; }
+.sys-achc p { margin: 3px 0 0; font: 400 13px/1.35 var(--sys-body); color: var(--sys-soft); }
+.sys-achc.hid p { font-style: italic; color: var(--sys-dim); }
+.sys-achc .pr { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.sys-achc .pr .bar { flex: 1; margin: 0; height: 4px; }
+.sys-achc .pr .bar i { display: block; height: 100%; background: var(--sys-red); }
+.sys-achc .pr span { font: 700 12px var(--sys-head); letter-spacing: .1em; color: var(--sys-soft); white-space: nowrap; }
+.sys-achc .ok { display: flex; justify-content: space-between; margin-top: 6px; font: 700 11px var(--sys-head); letter-spacing: .2em; text-transform: uppercase; color: var(--sys-gold); }
+.sys-achc .ok { gap: 10px; } .sys-achc .ok span { color: #fff; letter-spacing: .12em; white-space: nowrap; }
+@media (max-width: 1100px) {
+  .sys-ach .side { width: 250px; padding: 14px 16px; }
+  .sys-ach .sum .big b { font-size: 40px; }
+  .sys-ach .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+}
+@media (max-height: 620px) {
+  .sys-ach .main { padding: 12px 16px; }
+  .sys-ach .main .hd { margin-bottom: 8px; } .sys-ach .main .sys-h2 { font-size: 24px; }
+  .sys-achc { padding: 8px 10px; gap: 10px; } .sys-achc .bd svg { width: 36px; height: 36px; } .sys-achc p { font-size: 12px; }
+}
+/* tab bar: 8 pages; lets it scroll sideways instead of spilling on narrow screens (tablets / phones) */
+.sys-menu .tabs { min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: safe center; }
+.sys-menu .tabs::-webkit-scrollbar { display: none; }
+@media (max-width: 1200px) {
+  .sys-menu .tab { padding: 10px 6px; font-size: 14px; letter-spacing: .07em; }
+  .sys-menu .tabs .qe { margin: 0 4px; }
+}
+
 /* Minimal HUD setting (Interface > Minimal HUD): hide every gameplay HUD element except the minimap.
    Menus, fades and the photo-mode flash are untouched. */
 body.ui-minimal #hud > :not(.mm-wrap),

@@ -5,7 +5,7 @@
 //                    race {x, z0, dir, n, sp, limit}   photo {landmark}
 //   score = objective points + time bonus (vs par) + no-damage bonus + style (best combo, air time) -> rank S/A/B/C.
 //   save.state.missions = { done:[ids], best:{ id:{score, rank, time} }, total }  (sum of best scores)
-// Events: mission:start {id}  mission:objective {id, index, type}  mission:complete {id, score, rank}  mission:failed {id, reason}
+// Events: mission:start {id}  mission:objective {id, index, type}  mission:race {id, index, time}  mission:complete {id, score, rank}  mission:failed {id, reason}
 //   mission:abandon {id}.  Debug: __sys.debug.mission.{start(id), skip(), fail(), abandon(), unlockAll(), state()}
 import * as THREE from 'three';
 import { on, emit } from './events.js';
@@ -174,6 +174,7 @@ export function createMissions(sys) {
   }
   function advance(skipPts = false) {
     const st = M.objs[M.idx];
+    if (st.o.type === 'race' && st.started && !skipPts) emit('mission:race', { id: M.def.id, index: M.idx, time: st.rt }); // records (achievements.js)
     if (!skipPts) M.pts += st.o.type === 'race' ? PTS.raceEnd : st.o.type === 'reach' || st.o.type === 'tower' || st.o.type === 'photo' ? PTS[st.o.type] : 0;
     st.done = true; clearRace(st); setWp(null);
     audio.sfx.success?.();
