@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta http-equiv="Cache-Control" content="no-cache" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 <title>Spiderbench</title>
 <link rel="icon" href="data:," />
@@ -194,11 +195,21 @@ html[dir=rtl] #boot .bar{transform:scaleX(-1)}
   const showErr = m => { if (finished) return; el.classList.add('err'); lbl.textContent = HE ? 'לא ניתן להפעיל' : 'Could not start'; msgEl.textContent = (m || (HE ? 'שגיאה לא ידועה' : 'Unknown error')) + (HE ? ' — פרטים בקונסולה של הדפדפן' : ' — details in the browser console'); };
   const fail = (m, fatal) => { if (finished) return; if (fatal || cur === 'boot') { showErr(m); return; } const at = act; setTimeout(() => { if (act === at) showErr(m); }, 8000); };
   const msgOf = e => String(e?.message || e || '').slice(0, 240);
+  // (GalStrike) stale page after a deploy: a cached index.html (GitHub Pages caches it ~10 min) can point at hashed
+  // bundles the new deploy removed. Reload once with a cache-busting parameter instead of showing an error.
+  const staleReload = () => {
+    try {
+      if (sessionStorage.getItem('gs.staleReload')) return false;
+      sessionStorage.setItem('gs.staleReload', '1');
+      const u = new URL(location.href); u.searchParams.set('v', Date.now().toString(36)); location.replace(u.toString()); return true;
+    } catch (_) { return false; }
+  };
+  addEventListener('load', () => setTimeout(() => { try { sessionStorage.removeItem('gs.staleReload'); } catch (_) {} }, 15000));
   addEventListener('error', e => {
-    if (e.target && e.target !== window && e.target.tagName === 'SCRIPT') { fail('Could not load ' + (e.target.src || 'a script'), true); return; }
+    if (e.target && e.target !== window && e.target.tagName === 'SCRIPT') { if (staleReload()) return; fail('Could not load ' + (e.target.src || 'a script'), true); return; }
     if (e.target === window || !e.target) { const m = msgOf(e.error) || msgOf(e); fail(m, /webgl|context/i.test(m)); }
   }, true);
-  addEventListener('unhandledrejection', e => { const m = msgOf(e.reason); fail(m, /webgl|context/i.test(m)); });
+  addEventListener('unhandledrejection', e => { const m = msgOf(e.reason); if (/dynamically imported module|Importing a module script failed|Failed to fetch/i.test(m) && staleReload()) return; fail(m, /webgl|context/i.test(m)); });
   stage('boot');
 })();
 </script>
