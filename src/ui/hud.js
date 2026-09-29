@@ -247,6 +247,7 @@ export function createHud({ player, world, camera }) {
       sx = (x * 0.5 + 0.5) * innerWidth; sy = (-y * 0.5 + 0.5) * innerHeight; chev.style.display = '';
       ang = Math.atan2(-y, x) * 180 / Math.PI + 180; // chevron drawn pointing left
     }
+    if (!Number.isFinite(sx) || !Number.isFinite(sy) || !Number.isFinite(ang)) return; // (GalStrike) degenerate projection (target at the camera)
     ind.style.left = sx + 'px'; ind.style.top = sy + 'px';
     chev.setAttribute('transform', `rotate(${ang})`);
   }
