@@ -19,11 +19,55 @@ const CSS = `
 .gs-title button.sel { color: #fff; border-left-color: #e3262f; background: linear-gradient(90deg, rgba(227,38,47,.28), rgba(227,38,47,0)); }
 .gs-title .he { font-family: system-ui, sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 0; color: #8f9bb8; margin-inline-start: 12px; }
 .gs-title .hint { margin-top: 30px; font-size: 13px; letter-spacing: .2em; color: #7d89a8; text-transform: uppercase; }
+/* quick setup panel: time & weather + sound, bottom right */
+.gs-title .panel { position: absolute; right: 5vw; bottom: 9vh; width: min(380px, 40vw); padding: 18px 20px; background: rgba(6,12,28,.72);
+  border: 1px solid rgba(160,180,230,.18); backdrop-filter: blur(6px); }
+.gs-title .panel h4 { margin: 0 0 10px; font: 700 12px/1 var(--sys-body, sans-serif); letter-spacing: .3em; color: #9fb4e0; text-transform: uppercase; }
+.gs-title .panel h4 + * { margin-bottom: 16px; }
+.gs-title .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gs-title .chips button { font: 700 13px/1 var(--sys-body, sans-serif); letter-spacing: .08em; padding: 8px 11px; border: 1px solid rgba(160,180,230,.25);
+  color: #c9d3ea; background: rgba(255,255,255,.03); text-transform: none; }
+.gs-title .chips button.on { background: #e3262f; border-color: #e3262f; color: #fff; }
+.gs-title .snd { display: grid; grid-template-columns: 64px 1fr 38px; align-items: center; gap: 8px 10px; font-size: 13px; color: #c9d3ea; }
+.gs-title .snd input { width: 100%; accent-color: #e3262f; }
+.gs-title .snd output { text-align: right; color: #fff; font-variant-numeric: tabular-nums; }
+.gs-title .mute { margin-top: 12px; font: 700 13px/1 var(--sys-body, sans-serif) !important; letter-spacing: .1em !important; padding: 9px 12px !important;
+  border: 1px solid rgba(160,180,230,.25) !important; color: #fff !important; }
+.gs-title .mute.on { background: #e3262f; border-color: #e3262f !important; }
+.gs-title .sndnote { margin-top: 8px; font-size: 12px; color: #7d89a8; }
+@media (max-width: 900px), (max-height: 560px) { .gs-title .panel { right: 3vw; bottom: 3vh; width: min(300px, 44vw); padding: 12px 14px; } }
 `;
+
+const TODS = [['day', 'Day'], ['morning', 'Morning'], ['sunset', 'Sunset'], ['dusk', 'Dusk'], ['night', 'Night'], ['overcast', 'Rain']];
+
+// time & weather chips + volume sliders + mute, all writing the same settings the pause menu uses
+function setupPanel(sys, el) {
+  const { save, audio } = sys, S = () => save.state.settings;
+  const apply = () => { save.markDirty(); sys.applySettings?.(); sys.events?.emit?.('settings:changed', {}); };
+  const tods = [...el.querySelectorAll('.tod button')];
+  const markTod = () => tods.forEach(b => b.classList.toggle('on', b.dataset.v === (S().timeOfDay || 'day')));
+  tods.forEach(b => b.addEventListener('click', e => { e.stopPropagation(); S().timeOfDay = b.dataset.v; apply(); markTod(); audio?.sfx?.select?.(); }));
+  markTod();
+  const ranges = [...el.querySelectorAll('.snd input')];
+  const show = () => ranges.forEach(r => { r.value = S()[r.dataset.k] ?? 0.8; r.nextElementSibling.textContent = Math.round(r.value * 100) + '%'; });
+  ranges.forEach(r => r.addEventListener('input', () => { S()[r.dataset.k] = +r.value; if (S().muted) S().muted = false; apply(); show(); markMute(); }));
+  const mute = el.querySelector('.mute');
+  const markMute = () => { mute.textContent = S().muted ? 'Sound off · click to unmute' : 'Sound on · click to mute'; mute.classList.toggle('on', !!S().muted); };
+  mute.addEventListener('click', e => { e.stopPropagation(); toggleMute(sys); markMute(); });
+  for (const ev of ['pointerdown', 'mousedown', 'click']) el.querySelector('.panel').addEventListener(ev, e => e.stopPropagation());
+  show(); markMute();
+}
+
+// mute keeps the chosen volumes: it only zeroes the master bus (audio.setVolumes reads masterVolume)
+export function toggleMute(sys) {
+  const s = sys.save.state.settings; s.muted = !s.muted; sys.save.markDirty(); sys.applySettings?.();
+  sys.ui?.toast?.({ title: s.muted ? 'Sound off' : 'Sound on', text: s.muted ? 'Press N to unmute' : 'Press N to mute', ms: 1800 });
+}
 
 export function createTitle(sys) {
   const { ctx, flow, audio } = sys;
   const q = new URLSearchParams(location.search);
+  flow.onKey((e, mode) => { if (mode === 'play' && e.code === 'KeyN' && !e.repeat) { toggleMute(sys); return true; } return false; });
   if (q.has('notitle') || q.has('playtest')) return { update() {} };
 
   const style = document.createElement('style'); style.textContent = CSS; document.head.appendChild(style);
@@ -33,12 +77,26 @@ export function createTitle(sys) {
     <div class="by">A game by <b>Gal Asulin</b> · <span dir="rtl">משחק מאת גל אסולין</span></div>
     <nav>
       <button data-a="play">Play<span class="he">שחק</span></button>
+      <button data-a="missions">Missions<span class="he">משימות</span></button>
       <button data-a="suits">Suits<span class="he">חליפות</span></button>
       <button data-a="settings">Settings<span class="he">הגדרות</span></button>
     </nav>
-    <div class="hint">Enter / A to select · ↑ ↓ to move</div>`;
+    <div class="hint">Enter / A to select · ↑ ↓ to move</div>
+    <div class="panel interactive">
+      <h4>Time &amp; weather</h4>
+      <div class="chips tod">${TODS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+      <h4>Sound</h4>
+      <div class="snd">
+        <span>Master</span><input type="range" min="0" max="1" step="0.05" data-k="masterVolume"><output></output>
+        <span>Music</span><input type="range" min="0" max="1" step="0.05" data-k="musicVolume"><output></output>
+        <span>Effects</span><input type="range" min="0" max="1" step="0.05" data-k="sfxVolume"><output></output>
+      </div>
+      <button class="mute"></button>
+      <div class="sndnote">Sound starts with your first click or key press. Press N in game to mute.</div>
+    </div>`;
   document.body.appendChild(el);
-  const btns = [...el.querySelectorAll('button')];
+  const btns = [...el.querySelectorAll('nav button')];
+  setupPanel(sys, el);
   let sel = 0, active = true;
   const mark = () => btns.forEach((b, i) => b.classList.toggle('sel', i === sel));
   mark();

@@ -21,7 +21,7 @@ export function createAudio() {
   const AC = window.AudioContext || window.webkitAudioContext;
   let ac = null, ready = false, man = null, master, comp, muffle, musicLP, musicDuck, loadErr = null;
   const vol = { master: 0.8, music: 0.6, sfx: 0.9, ambience: 0.75, ui: 0.7 };
-  const MUSIC_K = 0.18; // (user r-quietmusic) "reduce the music to very low amount": the whole score sits ~15 dB under (the slider scales on top)
+  const MUSIC_K = 0.4; // (GalStrike: raised from 0.18 so the Music slider is audible; the title screen has volume + mute) (user r-quietmusic) "reduce the music to very low amount": the whole score sits ~15 dB under (the slider scales on top)
   const bus = {}, bufs = {}, mbufs = {}, lbufs = {}, voices = new Map();
   const music = { started: false, t0: 0, layer: {}, night: 0, I: 0, dayG: 0, nightG: 0, aG: 0, bG: 0 };
   const listenerPos = new THREE.Vector3(), _f = new THREE.Vector3();
@@ -264,7 +264,7 @@ export function createAudio() {
   }
 
   function setVolumes(s) {
-    vol.master = s.masterVolume; vol.music = s.musicVolume ?? 0.6; vol.sfx = s.sfxVolume; vol.ambience = s.ambienceVolume; vol.ui = s.uiVolume;
+    vol.master = s.muted ? 0 : s.masterVolume; vol.music = s.musicVolume ?? 0.6; vol.sfx = s.sfxVolume; vol.ambience = s.ambienceVolume; vol.ui = s.uiVolume;
     if (!ready) return; const t = now();
     master.gain.setTargetAtTime(vol.master, t, 0.05); bus.music.gain.setTargetAtTime(vol.music * MUSIC_K, t, 0.05); bus.sfx.gain.setTargetAtTime(vol.sfx, t, 0.05);
     bus.ambience.gain.setTargetAtTime(vol.ambience, t, 0.05); bus.ui.gain.setTargetAtTime(vol.ui, t, 0.05);
