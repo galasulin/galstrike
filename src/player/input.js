@@ -19,6 +19,8 @@
 //   swing, sprint, walk (Shift only, keyboard), jump, zip, drop, quick, rope (T) (held) + <name>Pressed / <name>Released edge flags, jumpHeld (seconds),
 //   aimT (seconds since the last deliberate camera move), usingPad.
 // Automation: input.press('KeyW' | 'Space' | 'MouseRight' | 'MouseMiddle' ...), input.release(code), input.releaseAll().
+// Touch (src/ui/touch.js): input.touch = { move {x,y} analog stick, lookDx / lookDy accumulated drag } is merged in poll();
+//   input.pollN counts polls (lets a short on-screen tap survive until the next frame reads it).
 export function createInput(el) {
   const keys = new Set(); const tapped = new Set(); // tapped: keys pressed since last poll (latched so short taps are never lost)
   const mouse = { dx: 0, dy: 0, buttons: 0 };
@@ -35,7 +37,11 @@ export function createInput(el) {
   addEventListener('blur', () => { keys.clear(); mouse.buttons = 0; });
   // (GalStrike) raw, unaccelerated mouse deltas where supported (Chrome/Edge). Without it Windows pointer ballistics +
   // Chrome's pointer-lock bug produce huge movementX spikes that throw the camera around.
+  // never on touch: a finger tap must not grab pointer lock (last pointer type is tracked below)
+  let lastPointer = 'mouse';
+  addEventListener('pointerdown', e => { lastPointer = e.pointerType || 'mouse'; }, true);
   const lock = () => {
+    if (lastPointer === 'touch' || lastPointer === 'pen') return;
     try {
       const p = el.requestPointerLock?.({ unadjustedMovement: true });
       if (p?.catch) p.catch(() => { try { el.requestPointerLock?.(); } catch {} });
@@ -83,6 +89,8 @@ export function createInput(el) {
   const dz = v => (Math.abs(v) < 0.15 ? 0 : (v - Math.sign(v) * 0.15) / 0.85);
   const has = c => keys.has(c) || synthetic.has(c) || tapped.has(c);
   const BTN = { MouseLeft: 1, MouseMiddle: 2, MouseRight: 4 };
+  const touch = { move: { x: 0, y: 0 }, lookDx: 0, lookDy: 0 };
+  let pollN = 0;
 
   function poll(dt = 1 / 60) {
     let mx = 0, my = 0;
@@ -90,7 +98,9 @@ export function createInput(el) {
     if (has('KeyS') || has('ArrowDown')) my -= 1;
     if (has('KeyD') || has('ArrowRight')) mx += 1;
     if (has('KeyA') || has('ArrowLeft')) mx -= 1;
-    let lx = mouse.dx, ly = mouse.dy; mouse.dx = mouse.dy = 0;
+    mx += touch.move.x; my += touch.move.y;
+    let lx = mouse.dx + touch.lookDx, ly = mouse.dy + touch.lookDy; mouse.dx = mouse.dy = 0; touch.lookDx = touch.lookDy = 0;
+    pollN++;
     let btn = mouse.buttons | tappedBtn.v; tappedBtn.v = 0;
     for (const [k, b] of Object.entries(BTN)) if (synthetic.has(k)) btn |= b;
     let swing = !!(btn & 4);
@@ -132,7 +142,7 @@ export function createInput(el) {
   }
 
   return {
-    keys, mouse, state, poll, sling,
+    keys, mouse, state, poll, sling, touch, get pollN() { return pollN; },
     press(code) { synthetic.add(code); }, release(code) { synthetic.delete(code); }, releaseAll() { synthetic.clear(); },
     consumeMouse() { const r = { dx: mouse.dx, dy: mouse.dy }; mouse.dx = mouse.dy = 0; return r; },
   };
