@@ -60,6 +60,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:bl
 #boot .row .lbl{transition:opacity .25s}
 #boot .msg{display:none;margin-top:12px;font:500 13px/1.45 'Spiderbench Sans',sans-serif;color:rgba(244,246,251,.78);max-width:min(720px,100%);overflow-wrap:anywhere}
 #boot.err .msg{display:block}
+#boot .info{margin-top:10px;font:500 13px/1.45 'Spiderbench Sans',sans-serif;color:rgba(244,246,251,.7);min-height:1.45em}#boot.err .info{display:none}
+#boot .retry{display:none;margin-top:14px;pointer-events:auto;cursor:pointer;font:700 13px/1 'Spiderbench Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#e3262f;border:0;padding:10px 16px}#boot.err .retry,#boot.slow .retry{display:inline-block}
 #boot.err .row{color:#ff8a8f}#boot.err .row .dots,#boot.err .bar b{display:none}#boot.err .bar i{background:#9e1017}
 #boot .row .dots i{display:inline-block;width:4px;height:4px;margin-left:6px;border-radius:50%;background:currentColor;opacity:.25;
   animation:bootDot 1.2s ease-in-out infinite}
@@ -101,6 +103,7 @@ html[dir=rtl] #boot .bar{transform:scaleX(-1)}
     <div class="row"><span class="lbl">Starting</span><span class="dots"><i></i><i></i><i></i></span></div>
     <div class="bar"><i></i><b></b></div>
     <div class="msg" role="alert"></div>
+    <div class="info" aria-live="polite"></div><button class="retry" type="button">Reload</button>
   </div>
 </div>
 <script>
@@ -168,11 +171,26 @@ html[dir=rtl] #boot .bar{transform:scaleX(-1)}
     set(1, 300, 'ease-out');
     setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 1000); }, 350);
   }
-  window.__boot = { stage, sub, done, get timings() { return { ...seen }; } };
+  window.__boot = { stage, sub, done, info: t => info(t), get timings() { return { ...seen }; } };
   // a failed start never leaves the screen loading forever. The error message is shown on the screen: at once when it is
   // certainly fatal (no WebGL, a script that failed to load, anything before the first loading stage), otherwise after
   // 8 s without any progress (a harmless error in an optional module while loading carries on is ignored)
   const msgEl = el.querySelector('.msg');
+  // (GalStrike) download progress + slow-load hint: big texture stages can take a while on slow connections / weak
+  // devices, so show what is happening instead of an apparently frozen bar, and offer a reload after a long stall
+  const infoEl = el.querySelector('.info'), retryEl = el.querySelector('.retry');
+  retryEl.textContent = HE ? 'טען מחדש' : 'Reload';
+  retryEl.addEventListener('click', () => location.reload());
+  let slowT = 0;
+  function info(t) { act = performance.now(); infoEl.textContent = t || ''; }
+  setInterval(() => {
+    if (finished || el.classList.contains('err')) return;
+    const idle = performance.now() - act;
+    if (idle > 30000 && !slowT) { slowT = 1; el.classList.add('slow');
+      infoEl.textContent = HE ? 'הטעינה איטית: חיבור איטי או מכשיר חלש. אפשר להמשיך לחכות, או לטעון מחדש. מומלץ מחשב עם כרטיס מסך.'
+        : 'Loading is slow: a slow connection or a weak device. Keep waiting or reload. A computer with a dedicated GPU is recommended.'; }
+    if (idle < 30000 && slowT) { slowT = 0; el.classList.remove('slow'); }
+  }, 1000);
   const showErr = m => { if (finished) return; el.classList.add('err'); lbl.textContent = HE ? 'לא ניתן להפעיל' : 'Could not start'; msgEl.textContent = (m || (HE ? 'שגיאה לא ידועה' : 'Unknown error')) + (HE ? ' — פרטים בקונסולה של הדפדפן' : ' — details in the browser console'); };
   const fail = (m, fatal) => { if (finished) return; if (fatal || cur === 'boot') { showErr(m); return; } const at = act; setTimeout(() => { if (act === at) showErr(m); }, 8000); };
   const msgOf = e => String(e?.message || e || '').slice(0, 240);

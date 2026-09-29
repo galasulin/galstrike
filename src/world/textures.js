@@ -19,7 +19,40 @@ export function loadImageRetry(src, tries = 5) {
   });
 }
 
-function loadImage(name) { return loadImageRetry(BASE + name); }
+function loadImage(name, prog) { return prog ? loadImageProgress(BASE + name, prog) : loadImageRetry(BASE + name); }
+
+// (GalStrike) fetch with byte progress (the city textures are ~50 MB: on a slow connection the loading screen must show
+// that it is downloading, not look frozen). Falls back to the plain Image path if streaming is unavailable or fails.
+async function loadImageProgress(src, prog) {
+  let got = 0;
+  try {
+    const r = await fetch(src);
+    if (!r.ok || !r.body) throw new Error(r.status + ' ' + src);
+    prog.add(+r.headers.get('content-length') || 0);
+    const rd = r.body.getReader(), parts = [];
+    for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; prog.tick(value.length); }
+    const url = URL.createObjectURL(new Blob(parts, { type: r.headers.get('content-type') || '' }));
+    try { return await loadImageRetry(url, 1); } finally { setTimeout(() => URL.revokeObjectURL(url), 0); }
+  } catch (e) {
+    console.warn('[textures] streaming load failed, retrying plainly', src, e);
+    prog.tick(-got);
+    return loadImageRetry(src);
+  }
+}
+function makeProgress() {
+  const boot = globalThis.__boot, he = document.documentElement.classList.contains('lang-he');
+  const p = { total: 0, done: 0, last: 0,
+    add(n) { p.total += n; },
+    tick(n) {
+      p.done += n; const now = performance.now(); if (now - p.last < 120) return; p.last = now;
+      const mb = v => (v / 1048576).toFixed(1);
+      if (p.total) boot?.sub?.(Math.min(1, p.done / p.total));
+      const num = `⁦${mb(p.done)} / ${mb(p.total)} MB⁩`; // LTR isolate: numbers read correctly inside Hebrew
+      boot?.info?.(p.total ? (he ? `מוריד ${num}` : `Downloading ${num}`) : '');
+    },
+    end() { boot?.info?.(''); } };
+  return p;
+}
 
 function tex(im, { srgb = false, repeat = true, aniso = 8 } = {}) {
   const t = new THREE.Texture(im);
@@ -70,7 +103,9 @@ export async function loadCityTextures(renderer) {
   const aniso = Math.min(16, renderer.capabilities.getMaxAnisotropy());
   const names = ['asphalt_col', 'asphalt_nrm', 'asphalt_macro', 'sidewalk_col', 'sidewalk_nrm', 'walls_col.jpg', 'walls_nrm.webp', 'walls_hao.jpg', 'curb_col.webp', 'asphalt_decals.webp', // (textures r2) nrm: lossless webp (was a 20 MB png); granite curb; (textures r3) road repair decals
     'interiors', 'signs', 'markings', 'leaves', 'grass_col', 'grass_nrm', 'water_nrm', 'noise', 'detail_nrm'];
-  const ims = Object.fromEntries(await Promise.all(names.map(async n => [n.replace(/\..*/, ''), await loadImage(n.includes('.') ? n : n + '.png')])));
+  const prog = makeProgress();
+  const ims = Object.fromEntries(await Promise.all(names.map(async n => [n.replace(/\..*/, ''), await loadImage(n.includes('.') ? n : n + '.png', prog)])));
+  prog.end();
   const markRects = await (await fetch(BASE + 'markings.json')).json();
   const T = {
     asphaltCol: tex(ims.asphalt_col, { srgb: true, aniso }),
