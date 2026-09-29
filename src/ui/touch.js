@@ -93,6 +93,7 @@ const I = {
   pause: '<path d="M9 6 V18 M15 6 V18"/>',
   map: '<path d="M4 6 L9 4 L15 6 L20 4 V18 L15 20 L9 18 L4 20 Z M9 4 V18 M15 6 V20"/>',
 };
+import { t as tr, onLangChange } from './i18n.js';
 const svg = k => `<svg viewBox="0 0 24 24">${I[k]}</svg>`;
 
 export function createTouch(sys) {
@@ -124,10 +125,10 @@ export function createTouch(sys) {
     const style = document.createElement('style'); style.id = 'touch-css'; style.textContent = CSS; document.head.appendChild(style);
     document.body.classList.add('touch-ui');
     try { document.exitPointerLock?.(); } catch {}
-    const hint = document.querySelector('.gs-title .hint'); if (hint) hint.textContent = 'Tap to select';
+    const hint = document.querySelector('.gs-title .hint'); if (hint) hint.textContent = tr('touch.tapSelect');
 
     const root = document.createElement('div'); root.id = 'touch-ui';
-    const B = (cls, key, label, extra = '') => `<div class="btn ${cls} ${extra}" data-k="${key}">${svg(I[key] ? key : 'zip')}<span>${label}</span></div>`;
+    const B = (cls, key, label, extra = '') => `<div class="btn ${cls} ${extra}" data-k="${key}">${svg(I[key] ? key : 'zip')}<span data-i="touch.${label.toLowerCase()}"></span></div>`; // (i18n) label = key suffix
     root.innerHTML = `<div class="zone l"></div><div class="zone r"></div><div class="stick"><i></i></div>
       <div class="set trav">
         ${B('s0 big', 'swing', 'Swing')}${B('s1', 'jump', 'Jump')}${B('s2', 'zip', 'Zip')}${B('s3', 'boost', 'Boost')}
@@ -139,10 +140,15 @@ export function createTouch(sys) {
       </div>
       <div class="top">${B('', 'map', 'Map')}${B('', 'pause', 'Pause')}</div>`;
     document.body.appendChild(root);
-    const back = document.createElement('div'); back.id = 'touch-back'; back.textContent = '‹ Back'; document.body.appendChild(back);
+    const back = document.createElement('div'); back.id = 'touch-back'; const back_ = () => { back.textContent = tr('touch.back'); }; back_(); document.body.appendChild(back);
     const rot = document.createElement('div'); rot.id = 'touch-rotate';
-    rot.innerHTML = `<svg viewBox="0 0 48 48"><rect x="15" y="6" width="18" height="36" rx="3"/><path d="M21 37 H27"/></svg>Rotate your device<small>GalStrike plays in landscape</small>`;
+    rot.innerHTML = `<svg viewBox="0 0 48 48"><rect x="15" y="6" width="18" height="36" rx="3"/><path d="M21 37 H27"/></svg><b></b><small></small>`;
     document.body.appendChild(rot);
+    const labels = () => {
+      root.querySelectorAll('[data-i]').forEach(n => { n.textContent = tr(n.dataset.i); });
+      rot.querySelector('b').textContent = tr('touch.rotate'); rot.querySelector('small').textContent = tr('touch.landscape'); back_();
+    };
+    labels(); onLangChange(labels);
 
     const $ = s => root.querySelector(s);
     const trav = $('.set.trav'), cmb = $('.set.cmb'), stick = $('.stick'), knob = stick.firstElementChild;

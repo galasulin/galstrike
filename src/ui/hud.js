@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { loadFonts } from './fonts.js';
 import { createReticle } from './reticle.js';
+import { t as tr, onLangChange } from './i18n.js';
 
 const COL = { street: '#0a1648', block: '#95b4f5', blockHi: '#b4cbff', water: '#1b4f86', shore: '#5da6e6', park: '#2f63b0', sidewalk: '#16266a', bg: '#0c1c55' };
 let PX_PER_M = 0.58;        // offscreen map resolution (lowered if the minimap canvas fails to allocate; see buildOffscreen)
@@ -82,15 +83,13 @@ export function createHud({ player, world, camera }) {
         <circle r="2.4" fill="#f5d34a"/>
         <path d="M-19,0 h4 M15,0 h4" stroke="#f5b82e" stroke-width="2"/>
       </g></svg></div>
-    <div class="help"><div class="t">CONTROLS</div>
-      <div><b>WASD</b>Move (camera relative)</div><div><b>Mouse</b>Camera (click to capture)</div>
-      <div><b>R-Mouse</b>Hold: web-swing · let go to release · press again to chain · on ground / wall: hop off into a swing · during a zip: cancel into a swing</div><div><b>Shift</b>On ground: parkour run · on walls: wall-run</div>
-      <div><b>Space</b>Jump (hold = charged high jump) · in a swing: release + launch · double-tap in air: flip · at zip arrival: launch off the point · wall jump · point-launch from perch</div>
-      <div><b>E / M-Mouse</b>Web-zip to <span style="color:#fff">&#9711;</span> point &amp; perch · air web-dash</div>
-      <div><b>T</b>While perched: web tightrope to the <span style="color:#fff">&#9711;</span> point · W / S walk the line · A / D sway · Space jump off</div><div><b>E on wall</b>Wall zip upward</div><div><b>Q</b>Quick web boost (in air)</div><div><b>W</b>Hold while falling: head-first dive</div><div><b>Ctrl+Mouse</b>On ground, Ctrl + Left / Right Mouse: web slingshot</div>
-      <div><b>C / Ctrl</b>Dive (hold in air) · drop off wall / perch</div><div><b>H</b>Toggle this help</div></div>
+    <div class="help"></div>
     <div class="dbg"></div>`;
   const compassC = root.querySelector('.mm-compass canvas'), mapC = root.querySelector('.mm-map canvas');
+  // (i18n) controls help: key label + description per row (hud.help.*), rebuilt when the language changes
+  const HELP = [['WASD', 'move'], ['k.mouse', 'mouse'], ['k.rmouse', 'swing'], ['Shift', 'shift'], ['Space', 'space'], ['k.emouse', 'zip'], ['T', 'rope'], ['k.ewall', 'wallzip'], ['Q', 'boost'], ['W', 'dive'], ['k.ctrlmouse', 'sling'], ['C / Ctrl', 'drop'], ['H', 'toggle']];
+  const helpHtml = () => `<div class="t">${tr('hud.help.title')}</div>` + HELP.map(([k, d]) => `<div><b>${k.startsWith('k.') ? tr('hud.help.' + k) : k}</b>${tr('hud.help.' + d).replace(/◯/g, '<span style="color:#fff">&#9711;</span>')}</div>`).join('');
+  root.querySelector('.help').innerHTML = helpHtml(); onLangChange(() => { root.querySelector('.help').innerHTML = helpHtml(); });
   const help = root.querySelector('.help'), ind = root.querySelector('.obj-ind'), chev = root.querySelector('.chev'), dbg = root.querySelector('.dbg');
   const debug = new URLSearchParams(location.search).has('debug');
   const shotMode = new URLSearchParams(location.search).has('shot');

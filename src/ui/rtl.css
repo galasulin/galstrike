@@ -1,0 +1,246 @@
+/* OWNER: systems engineer. Hebrew (RTL) presentation, loaded by src/ui/i18n.js. Everything here is scoped to
+   html.lang-he / html[dir=rtl] so the English UI is untouched.
+   - Fonts: 'Secular One' (headings) / 'Heebo Variable' (body) cover Hebrew only (unicode-range), Latin falls through to
+     Spiderbench Condensed / Sans. No faux bold for the single-weight Secular One. No wide tracking for Hebrew.
+   - Layout: text UI is mirrored (panels anchored to the right, borders / gradients / progress bars flipped). The 3D view,
+     minimap, compass, city map canvas, skill-tree geometry and touch buttons keep their positions. */
+
+/* ------------------------------------------------------------------ typography */
+html.lang-he {
+  --sys-head: 'Secular One', 'Spiderbench Condensed', 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --sys-body: 'Heebo Variable', 'Spiderbench Sans', 'Manrope', system-ui, 'Segoe UI', Arial, sans-serif;
+  font-synthesis: none;
+}
+html.lang-he #sys-root *, html.lang-he .gs-title *, html.lang-he #cmb-hud *, html.lang-he #touch-ui *, html.lang-he #touch-back,
+html.lang-he #touch-rotate, html.lang-he #hud .help * { letter-spacing: 0 !important; }
+/* key caps, numbers and times stay left-to-right inside Hebrew lines */
+html[dir=rtl] .sys-key, html[dir=rtl] #cmb-hud kbd, html[dir=rtl] .sys-binds .k { unicode-bidi: plaintext; }
+html.lang-he .sys-h2 { line-height: 1.1; font-weight: 400; }
+html.lang-he .sys-h3 { font-family: var(--sys-body); font-weight: 700; font-size: 15px; line-height: 1.2; }
+html.lang-he .sys-p { line-height: 1.6; }
+html.lang-he .sys-btn { font-weight: 400; font-size: 16px; padding: 10px 22px; }
+html.lang-he .sys-menu .tab { font-weight: 400; font-size: 17px; padding: 12px 13px; }
+html[dir=rtl] .sys-ach .sum .big { justify-content: flex-end; }
+html[dir=rtl] .sys-photo .prow .l span, html[dir=rtl] .sys-obj span, html[dir=rtl] .sys-pin .d { unicode-bidi: plaintext; }
+/* the Language row shows each language in its own script: no wide tracking on the Hebrew label */
+.sys-seg[data-k=lang] button[data-v=he] { letter-spacing: 0; font-family: 'Heebo Variable', var(--sys-body); font-weight: 700; }
+html.lang-he .sys-banner .cap { font-size: 17px; font-weight: 400; padding: 6px 22px 6px 16px; }
+html.lang-he .sys-banner .big { font-weight: 400; font-size: 60px; line-height: 1.15; }
+html.lang-he .sys-banner .sub { font-size: 18px; }
+html.lang-he .sys-toast h4 { font-weight: 400; font-size: 18px; line-height: 1.15; }
+html.lang-he .sys-toast p { font-size: 14px; line-height: 1.35; }
+html.lang-he .sys-obj small { font: 700 12px var(--sys-body); }
+html.lang-he .sys-obj b { font-weight: 400; font-size: 17px; line-height: 1.3; }
+html.lang-he .sys-prompt { font-weight: 400; font-size: 20px; }
+html.lang-he .sys-prompt .sub { font-size: 14px; }
+html.lang-he .sys-crime small { font: 700 12px var(--sys-body); }
+html.lang-he .sys-crime b { font-weight: 400; }
+html.lang-he .sys-crime .t { font: 500 14px var(--sys-body); }
+html.lang-he .sys-hex i { font: 700 9px/1 var(--sys-body); }
+html.lang-he .sys-xp .lbl { font: 700 12px var(--sys-body); }
+html.lang-he .sys-mis .hd small { font: 700 12px var(--sys-body); }
+html.lang-he .sys-mis .hd b { font-weight: 400; }
+html.lang-he .sys-mis .ob { font: 500 15px var(--sys-body); }
+html.lang-he .sys-mres small { font: 700 14px var(--sys-body); }
+html.lang-he .sys-mres h3 { font-weight: 400; line-height: 1.15; }
+html.lang-he .sys-mres .ln { font: 600 15px var(--sys-body); }
+html.lang-he .sys-sub { font-weight: 500; }
+html.lang-he .sys-sub b { margin-right: 0; margin-left: 6px; }
+html.lang-he .sys-list-item b, html.lang-he .sys-settings .cats b, html.lang-he .sys-coll .cats .sys-list-item b { font-weight: 400; }
+html.lang-he .sys-opt > label { font-weight: 400; font-size: 17px; }
+html.lang-he .sys-opt > label small { font-size: 13.5px; line-height: 1.45; }
+html.lang-he .sys-seg button { font: 600 14px var(--sys-body); padding: 8px 14px; }
+html.lang-he .sys-binds div { font: 500 15px var(--sys-body); }
+html.lang-he .sys-binds div.h { font: 700 12.5px var(--sys-body); }
+html.lang-he .sys-map .legend .row, html.lang-he .sys-map .zoomhint { font-family: var(--sys-body); font-weight: 600; }
+html.lang-he .sys-map .legend .dist b, html.lang-he .sys-map .card h5, html.lang-he .sys-map .reveal-hint b { font-weight: 400; }
+html.lang-he .sys-map .legend .dist small, html.lang-he .sys-map .card small, html.lang-he .sys-map .reveal-hint small { font-family: var(--sys-body); font-weight: 700; }
+html.lang-he .sys-map .card p { line-height: 1.5; }
+html.lang-he .sys-citem .nm, html.lang-he .sys-drow .h b, html.lang-he .sys-achc b, html.lang-he .sys-suit .nm { font-weight: 400; }
+html.lang-he .sys-citem .dn, html.lang-he .sys-achc .ok, html.lang-he .sys-ach .sum .lbl, html.lang-he .sys-ach .recs .row span, html.lang-he .sys-mpage .stats small { font-family: var(--sys-body); font-weight: 700; }
+html.lang-he .sys-achc p, html.lang-he .sys-citem .ds { line-height: 1.45; }
+html.lang-he .sys-mpage .objs { font: 500 16px/1.9 var(--sys-body); }
+html.lang-he .sys-mpage .cats .sys-list-item b { font-weight: 400; }
+html.lang-he .sys-mpage .acts .warn { font: 600 13px var(--sys-body); }
+html.lang-he .sys-skills .detail .state, html.lang-he .sys-skills .detail .eff { font-family: var(--sys-body); }
+html.lang-he .sys-skills .detail .skstats .row, html.lang-he .sys-skills .detail .next .nx { font: 500 13px var(--sys-body); }
+html.lang-he .sys-node label { font: 500 12px/1.2 var(--sys-body); }
+html.lang-he .sys-photo .ptabs div, html.lang-he .sys-photo .opts div, html.lang-he .sys-photo .prow .l { font-family: var(--sys-body); font-weight: 600; }
+html.lang-he .sys-photo .hints, html.lang-he .sys-menu .foot, html.lang-he .sys-photo .lm, html.lang-he .sys-photo .saved div { font-family: var(--sys-body); font-weight: 600; }
+html.lang-he .sys-menu .stats .xpcol .l, html.lang-he .sys-menu .stats .sp { font-family: var(--sys-body); font-weight: 700; }
+html.lang-he .sys-fade .dest small, html.lang-he .sys-fade .ld { font-family: var(--sys-body); font-weight: 700; }
+html.lang-he .sys-fade .dest b { font-weight: 400; }
+html.lang-he .sys-pin .d { font-family: var(--sys-body); font-weight: 700; }
+@media (max-width: 1400px) { html.lang-he .sys-menu .tab { font-size: 16px; } html.lang-he .sys-banner .big { font-size: 42px; } }
+@media (max-width: 1200px) { html.lang-he .sys-menu .tab { font-size: 15px; padding: 10px 7px; } }
+
+/* ------------------------------------------------------------------ HUD layer (#sys-root): mirrored to the right */
+html[dir=rtl] .sys-key { margin-right: 0; margin-left: .5em; }
+html[dir=rtl] .sys-prompt.anchored, html[dir=rtl] .sys-prompt.anchored.on { transform: translate(-100%, -50%); }
+html[dir=rtl] .sys-xp { left: auto; right: 2.2vw; transform: translateX(16px); }
+html[dir=rtl] .sys-xp.on { transform: none; }
+html[dir=rtl] .sys-xp .bar { transform: skewX(20deg) scaleX(-1); }
+html[dir=rtl] .sys-xp .gain { margin-left: 0; margin-right: 10px; }
+html[dir=rtl] .sys-obj { left: auto; right: 2.2vw; padding: 8px 14px 9px 16px; border-left: 0; border-right: 3px solid var(--sys-gold);
+  background: linear-gradient(270deg, rgba(8,15,38,.78), rgba(8,15,38,.35) 75%, rgba(8,15,38,0)); transform: translateX(12px); }
+html[dir=rtl] .sys-obj.on { transform: none; }
+html[dir=rtl] .sys-obj span { direction: rtl; unicode-bidi: plaintext; }
+html[dir=rtl] .sys-toasts { left: auto; right: 2.2vw; }
+html[dir=rtl] .sys-toast { padding: 12px 14px 12px 18px; border-left: 0; border-right: 3px solid var(--sys-red);
+  background: linear-gradient(270deg, rgba(8,15,38,.9), rgba(8,15,38,.55) 80%, rgba(8,15,38,0)); animation-name: sysToastInR; }
+html[dir=rtl] .sys-toast.out { animation-name: sysToastOutR; }
+html[dir=rtl] .sys-toast .ct { margin-left: 0; margin-right: auto; direction: ltr; }
+html[dir=rtl] .sys-toast.gold { border-right-color: var(--sys-gold); }
+html[dir=rtl] .sys-toast.cyan { border-right-color: var(--sys-cyan); }
+html[dir=rtl] .sys-toast.ach { border-right-color: var(--sys-gold); background: linear-gradient(270deg, rgba(245,184,46,.30), rgba(9,17,42,.86) 55%); }
+@keyframes sysToastInR { from { opacity: 0; transform: translateX(40px); clip-path: inset(0 0 0 100%); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@keyframes sysToastOutR { to { opacity: 0; transform: translateX(30px); } }
+html[dir=rtl] .sys-banner .cap { clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%); }
+html[dir=rtl] .sys-banner .big::before { background: linear-gradient(270deg, transparent, #fff); }
+html[dir=rtl] .sys-banner .big::after { background: linear-gradient(90deg, transparent, #fff); }
+html[dir=rtl] .sys-crime { right: auto; left: 2.4vw; text-align: left; border-right: 0; border-left: 3px solid var(--sys-red);
+  background: linear-gradient(90deg, rgba(8,15,38,.85), rgba(8,15,38,.2)); transform: translateX(-20px); }
+html[dir=rtl] .sys-crime.on { transform: none; }
+html[dir=rtl] .sys-crime .meter { transform: skewX(20deg); }
+html[dir=rtl] .sys-crime .meter i { margin-left: 0; margin-right: auto; }
+html[dir=rtl] .sys-fade .dest { left: auto; right: 5vw; border-left: 0; padding-left: 0; border-right: 4px solid var(--sys-red); padding-right: 18px; }
+html[dir=rtl] .sys-fade .ld { right: auto; left: 5vw; }
+html[dir=rtl] .sys-fade .ld .line { transform: scaleX(-1); }
+html[dir=rtl] .sys-mres .rk { right: auto; left: 24px; }
+html[dir=rtl] .sys-mres .box { clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); }
+html[dir=rtl] .sys-mres .ln i { margin-left: 0; margin-right: 10px; }
+html[dir=rtl] .sys-mres .ln em { margin-left: 0; margin-right: 10px; }
+html[dir=rtl] .sys-mres .xp { text-align: left; }
+
+/* ------------------------------------------------------------------ pause menu shell + shared widgets */
+html[dir=rtl] .sys-menu .tab .dot { right: auto; left: 8px; }
+html[dir=rtl] .sys-menu .page { transform: translateX(-30px); }
+html[dir=rtl] .sys-menu .page.from-left { transform: translateX(30px); }
+html[dir=rtl] .sys-menu .page.on { transform: none; }
+html[dir=rtl] .sys-menu .foot .left { margin-right: 0; margin-left: auto; }
+html[dir=rtl] .sys-menu .stats .xpcol .b { transform: skewX(20deg) scaleX(-1); }
+html[dir=rtl] .sys-menu .brand span { direction: ltr; }
+html[dir=rtl] .sys-panel.cut { clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); }
+html[dir=rtl] .sys-btn { clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+html[dir=rtl] .sys-rule { background: linear-gradient(270deg, var(--sys-line), transparent); }
+html[dir=rtl] .sys-list-item { border-left: 0; border-right: 3px solid transparent; }
+html[dir=rtl] .sys-list-item.on { background: linear-gradient(270deg, rgba(227,38,47,.28), rgba(227,38,47,0)); border-right-color: var(--sys-red); padding-left: 16px; padding-right: 22px; }
+html[dir=rtl] .sys-scroll { direction: rtl; }
+html[dir=rtl] input[type=range].sys-range::-webkit-slider-runnable-track { background: linear-gradient(270deg, #fff var(--p, 50%), rgba(255,255,255,.18) var(--p, 50%)); }
+html[dir=rtl] input[type=range].sys-range::-webkit-slider-thumb { transform: skewX(15deg); }
+
+/* map (the canvas is geographic: only the panels' text flows right to left; legend / hints keep their sides) */
+html[dir=rtl] .sys-map .legend .row span { margin-left: 0; margin-right: auto; }
+html[dir=rtl] .sys-map .legend .dist .pbar { transform: scaleX(-1); }
+html[dir=rtl] .sys-map .zoomhint { text-align: right; }
+
+/* suits: the card column moves to the right, Spider-Man stands on the left (camera offset flips in suits.js) */
+html[dir=rtl] .sys-suits .col { left: auto; right: 3vw; }
+html[dir=rtl] .sys-suits .rot { right: auto; left: 3vw; }
+html[dir=rtl] .sys-menu.see-through .veil { clip-path: inset(0 0 0 58%); }
+html[dir=rtl] .sys-suit { clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px); }
+html[dir=rtl] .sys-suit .eq, html[dir=rtl] .sys-suits .grid .sys-suit .eq { left: auto; right: 5px; }
+html[dir=rtl] .sys-suit .lock { right: auto; left: 20px; }
+html[dir=rtl] .sys-suits .info .sw i { transform: skewX(25deg); }
+
+/* skills */
+html[dir=rtl] .sys-skills .detail .eff { border-left: 0; border-right: 2px solid var(--sys-cyan); }
+html[dir=rtl] .sys-skills .detail .skstats .row b { text-align: left; }
+html[dir=rtl] .sys-skills .detail .skstats .row .bar { transform: skewX(20deg) scaleX(-1); }
+html[dir=rtl] .sys-tree .sys-p { max-width: 80%; }
+
+/* collectibles / missions / achievements */
+html[dir=rtl] .sys-coll .cats .sys-list-item span, html[dir=rtl] .sys-coll .main .hd .pc, html[dir=rtl] .sys-drow .h em, html[dir=rtl] .sys-mpage .cats .sys-list-item em { margin-left: 0; margin-right: auto; }
+html[dir=rtl] .sys-coll .grid { padding-right: 0; padding-left: 6px; }
+html[dir=rtl] .sys-citem .ck { right: auto; left: 10px; }
+html[dir=rtl] .sys-citem.photo .img .stamp { right: auto; left: 8px; transform: rotate(6deg); }
+html[dir=rtl] .sys-drow { border-left: 0; border-right: 3px solid var(--sys-line); }
+html[dir=rtl] .sys-drow.done { border-right-color: var(--sys-red); background: linear-gradient(270deg, rgba(227,38,47,.14), rgba(255,255,255,.02)); }
+html[dir=rtl] .sys-drow .pips { direction: rtl; }
+html[dir=rtl] .sys-drow .pips i { transform: skewX(25deg); }
+html[dir=rtl] .sys-mpage .cats .sys-list-item b { text-align: right; }
+html[dir=rtl] .sys-mpage .objs { padding-left: 0; padding-right: 22px; }
+html[dir=rtl] .sys-mpage .det { padding-right: 0; padding-left: 6px; }
+html[dir=rtl] .sys-achc { border-left: 1px solid rgba(160,188,255,.14); border-right: 3px solid rgba(160,188,255,.25); clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px); }
+html[dir=rtl] .sys-achc.on { border-left-color: rgba(245,184,46,.45); border-right-color: var(--sys-gold); background: linear-gradient(260deg, rgba(245,184,46,.16), rgba(245,184,46,.02) 60%); }
+html[dir=rtl] .sys-achc .pr .bar, html[dir=rtl] .sys-ach .sum .bar { transform: skewX(20deg) scaleX(-1); }
+
+/* settings */
+html[dir=rtl] .sys-opt .val { text-align: left; direction: ltr; }
+html[dir=rtl] .sys-seg button { margin-left: 0; margin-right: -1px; }
+
+/* photo mode: panel on the right, "saved" print and landmark tag on the left */
+html[dir=rtl] .sys-photo .panel { left: auto; right: 2.2vw; }
+html[dir=rtl] .sys-photo.clean .panel, html[dir=rtl] .sys-photo.clean .hints { transform: translateX(20px); }
+html[dir=rtl] .sys-photo .lm { right: auto; left: 3vw; border-left: 0; border-right: 3px solid var(--sys-gold); }
+html[dir=rtl] .sys-photo .saved { right: auto; left: 3vw; transform: translateY(10px) rotate(-2deg); }
+html[dir=rtl] .sys-photo .saved.on { transform: rotate(-2deg); }
+
+/* ------------------------------------------------------------------ HUD controls help (#hud): text only, stays bottom-left */
+html.lang-he #hud .help { font-family: var(--sys-body); font-size: 14.5px; line-height: 1.55; direction: rtl; padding: 10px 14px 10px 26px;
+  border-left: 0; border-right: 2px solid #e23b3b; background: linear-gradient(270deg, rgba(8,14,34,.7), rgba(8,14,34,.05)); max-width: 46vw; }
+html.lang-he #hud .help b { margin-left: 10px; font-weight: 700; }
+html.lang-he #hud .help .t { font-weight: 700; }
+html[dir=rtl] #hud .mm-wrap, html[dir=rtl] #hud .obj-ind { direction: ltr; }
+
+/* ------------------------------------------------------------------ combat HUD: mirrored (bars top-right, combo left) */
+html.lang-he #cmb-hud { font-family: var(--sys-head); }
+html[dir=rtl] #cmb-hud .bars { left: auto; right: 2.2vw; background: linear-gradient(270deg, rgba(7,13,31,.72), rgba(7,13,31,0));
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
+html[dir=rtl] #cmb-hud .hp, html[dir=rtl] #cmb-hud .focus b { transform: skewX(18deg); }
+html[dir=rtl] #cmb-hud .hp i, html[dir=rtl] #cmb-hud .focus b i { transform-origin: 100% 50%; }
+html[dir=rtl] #cmb-hud .hp i { left: auto; right: 0; }
+html[dir=rtl] #cmb-hud .lbl { margin: 0 2px 5px 0; }
+html.lang-he #cmb-hud .lbl { font: 700 13px/1 var(--sys-body); }
+html[dir=rtl] #cmb-hud .combo { right: auto; left: 4.5vw; text-align: left; direction: ltr; }
+html.lang-he #cmb-hud .combo .t { font: 700 15px/1 var(--sys-body); text-align: left; }
+html[dir=rtl] #cmb-hud .combo .bar { transform-origin: 0 50%; }
+html.lang-he #cmb-hud .banner { font-weight: 400; font-size: 34px; }
+html.lang-he #cmb-hud .msg { font: 600 18px/1.2 var(--sys-body); }
+html.lang-he #cmb-hud .hint { font: 600 14px/1 var(--sys-body); }
+
+/* ------------------------------------------------------------------ title screen */
+html.lang-he .gs-title { font-family: var(--sys-body); }
+html[dir=rtl] .gs-title { background: linear-gradient(270deg, rgba(4,8,20,.88) 0%, rgba(4,8,20,.55) 38%, rgba(4,8,20,0) 70%); }
+html[dir=rtl] .gs-title h1 { align-self: flex-start; }
+html.lang-he .gs-title .kick { font: 700 17px/1.2 var(--sys-body); color: #9fb4e0; }
+html.lang-he .gs-title .by { font-size: 19px; }
+html.lang-he .gs-title nav button { font: 400 32px/1.1 var(--sys-head); padding: 6px 14px 8px 18px; }
+html[dir=rtl] .gs-title nav button { border-left: 0; border-right: 3px solid transparent; }
+html[dir=rtl] .gs-title nav button.sel { border-right-color: #e3262f; background: linear-gradient(270deg, rgba(227,38,47,.28), rgba(227,38,47,0)); }
+html.lang-he .gs-title .hint { font-size: 15px; }
+html[dir=rtl] .gs-title .hint { direction: rtl; unicode-bidi: plaintext; }
+html[dir=rtl] .gs-title .panel { right: auto; left: 5vw; }
+@media (max-width: 900px), (max-height: 560px) { html[dir=rtl] .gs-title .panel { right: auto; left: 3vw; } }
+html.lang-he .gs-title .panel h4 { font: 700 14px/1 var(--sys-body); }
+html.lang-he .gs-title .chips button { font: 600 14px/1 var(--sys-body); }
+html[dir=rtl] .gs-title .snd output { text-align: left; }
+html.lang-he .gs-title .snd { font-size: 14px; }
+html.lang-he .gs-title .mute { font: 600 14px/1 var(--sys-body) !important; }
+html.lang-he .gs-title .sndnote { font-size: 13px; line-height: 1.45; }
+
+/* ------------------------------------------------------------------ touch controls: positions unchanged, Hebrew labels */
+html.lang-he #touch-ui .btn { font: 600 calc(var(--b) * .2)/1 var(--sys-body); }
+html.lang-he #touch-ui .btn.big { font-size: calc(var(--b) * .23); }
+html.lang-he #touch-ui .top .btn { font-size: 12px; }
+html.lang-he #touch-back { font: 700 15px/1 var(--sys-body); }
+html.lang-he #touch-rotate { font: 400 26px/1.3 var(--sys-head); }
+html.lang-he #touch-rotate small { font: 500 15px/1.4 var(--sys-body); }
+
+/* number runs with spaces ("120 / 500 XP") would be reordered by the bidi algorithm: keep them LTR */
+html[dir=rtl] .sys-menu .stats .xn, html[dir=rtl] .sys-xp .num, html[dir=rtl] .sys-coll .cats .sys-list-item span,
+html[dir=rtl] .sys-mres .ln b, html[dir=rtl] .sys-drow .h em { direction: ltr; unicode-bidi: isolate; }
+
+/* touch layout: the right edge belongs to the minimap, map / pause and the action buttons, so the text HUD and the combat
+   bars stay on the left (as in English); only their text runs right to left */
+html[dir=rtl] body.touch-ui .sys-xp { right: auto; left: 2.2vw; }
+html[dir=rtl] body.touch-ui .sys-obj { right: auto; left: 2.2vw; border-right: 0; border-left: 3px solid var(--sys-gold); padding: 8px 16px 9px 14px;
+  background: linear-gradient(90deg, rgba(8,15,38,.78), rgba(8,15,38,.35) 75%, rgba(8,15,38,0)); }
+html[dir=rtl] body.touch-ui .sys-toasts { right: auto; left: 2.2vw; }
+html[dir=rtl] body.touch-ui .sys-toast { border-right: 0; border-left: 3px solid var(--sys-red); padding: 12px 18px 12px 14px;
+  background: linear-gradient(90deg, rgba(8,15,38,.9), rgba(8,15,38,.55) 80%, rgba(8,15,38,0)); animation-name: sysToastIn; }
+html[dir=rtl] body.touch-ui .sys-toast.out { animation-name: sysToastOut; }
+html[dir=rtl] body.touch-ui .sys-toast.gold, html[dir=rtl] body.touch-ui .sys-toast.ach { border-left-color: var(--sys-gold); }
+html[dir=rtl] body.touch-ui .sys-toast.cyan { border-left-color: var(--sys-cyan); }
+html[dir=rtl] body.touch-ui #cmb-hud .bars { right: auto; left: 2.2vw; background: linear-gradient(90deg, rgba(7,13,31,.72), rgba(7,13,31,0));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }

@@ -6,6 +6,7 @@
 // each frame) using the same transform as hud.js (VIEW_M = 260 m across, player at 50% / 62%, camera-heading-up).
 import * as THREE from 'three';
 import { emit } from './events.js';
+import { t } from '../../ui/i18n.js';
 import { findRoute, routeLength } from './route.js';
 import { badgeImage } from '../../ui/menus/icons.js';
 
@@ -47,7 +48,7 @@ export function createTravel(sys) {
     flow.setMode('travel');
     emit('fasttravel:start', { station });
     const dn = data.districts.find(d => d.id === station.district)?.name || '';
-    ui.fade(true, station.name, dn ? `${dn} · Subway` : 'Subway'); audio.sfx.travel();
+    ui.fade(true, station.name, dn ? t('travel.subwayIn', { d: dn }) : t('travel.subway')); audio.sfx.travel();
     await wait(700);
     const p = station.arrive.clone(); p.y += 1.2;
     player.teleport?.(p, station.yaw);
@@ -57,7 +58,7 @@ export function createTravel(sys) {
     ui.fade(false); ui.setVisible(true);
     traveling = false;
     emit('fasttravel:end', { station });
-    ui.toast({ title: 'Arrived', text: station.name, icon: 'station', tone: 'cyan', sound: null });
+    ui.toast({ title: t('travel.arrived'), text: station.name, icon: 'station', tone: 'cyan', sound: null });
     void prevMode;
     return true;
   }
@@ -68,7 +69,7 @@ export function createTravel(sys) {
     traveling = true;
     if (sys.pause?.open) sys.pause.close(true);
     flow.setMode('travel');
-    ui.fade(true, 'Web Travel', ''); audio.sfx.travel();
+    ui.fade(true, t('travel.web'), ''); audio.sfx.travel();
     await wait(450);
     let top = 0;
     for (let dx = -30; dx <= 30; dx += 10) for (let dz = -30; dz <= 30; dz += 10) top = Math.max(top, ctx.world.groundHeight(x + dx, z + dz) || 0);
@@ -127,7 +128,7 @@ export function createTravel(sys) {
     if (waypoint && route && ctx.params?.gpsDistance) {
       const L = routeLength(route);
       g.save(); g.font = `700 ${Math.round(h * 0.085)}px "Barlow Condensed", Rajdhani, sans-serif`; g.textAlign = 'right'; g.textBaseline = 'top';
-      g.fillStyle = 'rgba(0,0,20,.55)'; const txt = L > 1000 ? (L / 1000).toFixed(1) + ' km' : Math.round(L) + ' m'; const tw = g.measureText(txt).width;
+      g.fillStyle = 'rgba(0,0,20,.55)'; const txt = L > 1000 ? t('dist.km', { n: (L / 1000).toFixed(1) }) : t('dist.m', { n: Math.round(L) }); const tw = g.measureText(txt).width;
       g.fillRect(w - tw - h * 0.06, h * 0.03, tw + h * 0.04, h * 0.11); g.fillStyle = '#f5c02e'; g.fillText(txt, w - h * 0.04, h * 0.045); g.restore();
     }
   }
@@ -141,7 +142,7 @@ export function createTravel(sys) {
       routeT -= dt;
       if (waypoint) {
         if (Math.hypot(waypoint.x - p.x, waypoint.z - p.z) < 22 && Math.abs(waypoint.y - p.y) < 40) {
-          if (wpTag !== 'mission') ui.toast({ title: 'Destination Reached', text: '', icon: 'waypoint', sound: 'toast' }); setWaypoint(null, { silent: true }); return;
+          if (wpTag !== 'mission') ui.toast({ title: t('travel.reached'), text: '', icon: 'waypoint', sound: 'toast' }); setWaypoint(null, { silent: true }); return;
         }
         if (routeT <= 0 && (routeFrom.distanceTo(p) > 25 || !route)) { route = findRoute(p.x, p.z, waypoint.x, waypoint.z); routeFrom.copy(p); routeT = 0.5; }
         else if (route) route[0] = [p.x, p.z];

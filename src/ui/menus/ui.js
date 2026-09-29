@@ -5,6 +5,7 @@ import '../systems.css';
 import { icon, badge } from './icons.js';
 
 import { loadFonts } from '../fonts.js';
+import { t, isRtl, onLangChange } from '../i18n.js';
 export { loadFonts };
 
 export function createUI({ camera, audio }) {
@@ -12,13 +13,13 @@ export function createUI({ camera, audio }) {
   const root = document.getElementById('sys-root') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'sys-root' }));
   root.innerHTML = `
     <div class="sys-pins"></div>
-    <div class="sys-xp"><div class="sys-hex"><svg viewBox="0 0 50 56"><path d="M25 2 L47 14.5 L47 41.5 L25 54 L3 41.5 L3 14.5 Z" fill="rgba(8,15,38,.75)" stroke="#fff" stroke-width="2"/></svg><i>LVL</i><b>1</b></div>
-      <div><div class="lbl"><span>EXPERIENCE</span><span class="num"></span></div><div class="bar"><s></s><i></i></div></div><div class="gain"></div></div>
+    <div class="sys-xp"><div class="sys-hex"><svg viewBox="0 0 50 56"><path d="M25 2 L47 14.5 L47 41.5 L25 54 L3 41.5 L3 14.5 Z" fill="rgba(8,15,38,.75)" stroke="#fff" stroke-width="2"/></svg><i class="lvl"></i><b>1</b></div>
+      <div><div class="lbl"><span class="xpl"></span><span class="num"></span></div><div class="bar"><s></s><i></i></div></div><div class="gain"></div></div>
     <div class="sys-obj"><small></small><b></b><span></span></div>
     <div class="sys-toasts"></div>
     <div class="sys-sub"><b></b><span></span></div>
     <div class="sys-banner"><div class="cap"></div><div class="big"></div><div class="sub"></div></div>
-    <div class="sys-crime"><small>CRIME IN PROGRESS</small><b></b><div class="meter"><i></i></div><div class="t"></div></div>
+    <div class="sys-crime"><small></small><b></b><div class="meter"><i></i></div><div class="t"></div></div>
     <div class="sys-prompt"><div class="ring"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" fill="rgba(0,0,0,.45)" stroke="rgba(255,255,255,.35)" stroke-width="2.5"/><circle class="arc" cx="22" cy="22" r="19" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="119.4" stroke-dashoffset="119.4"/></svg><b>F</b></div><div><span class="lbl"></span><span class="sub"></span></div></div>
     <div class="sys-snap"></div>
     <div class="sys-fade"><div class="tunnel"><div class="lights"></div><div class="rail"></div>
@@ -27,8 +28,16 @@ export function createUI({ camera, audio }) {
         <g fill="#0b1226">${Array.from({ length: 7 }, (_, i) => `<rect x="${40 + i * 66}" y="26" width="46" height="34" rx="3"/>`).join('')}</g>
         <g fill="#ffe7a8" opacity=".55">${Array.from({ length: 7 }, (_, i) => `<rect x="${42 + i * 66}" y="28" width="42" height="12" rx="2"/>`).join('')}</g>
         <rect x="8" y="72" width="504" height="6" fill="#e3262f"/><circle cx="470" cy="92" r="4" fill="#fff6c8"/></svg></div>
-      <div class="dest"><small>FAST TRAVEL</small><b></b><i></i></div><div class="ld"><span>Loading</span><div class="line"><i></i></div></div></div>`;
+      <div class="dest"><small></small><b></b><i></i></div><div class="ld"><span></span><div class="line"><i></i></div></div></div>`;
   const $ = s => root.querySelector(s);
+  // (i18n) static captions, re-applied when the language changes
+  const labels = () => {
+    $('.sys-xp .lvl').textContent = t('ui.lvl'); $('.sys-xp .xpl').textContent = t('ui.xp');
+    $('.sys-fade .dest small').textContent = t('ui.fastTravel'); $('.sys-fade .ld span').textContent = t('ui.loading');
+    if (!crimeLast?.on) $('.sys-crime small').textContent = t('ui.crimeInProgress');
+  };
+  let crimeLast = null;
+  labels(); onLangChange(() => { labels(); objKey = ''; objDist = ''; promptKey = ''; });
   const el = {
     pins: $('.sys-pins'), xp: $('.sys-xp'), xpLvl: $('.sys-xp .sys-hex b'), xpNum: $('.sys-xp .num'), xpBar: $('.sys-xp .bar i'), xpNew: $('.sys-xp .bar s'), xpGain: $('.sys-xp .gain'),
     toasts: $('.sys-toasts'), banner: $('.sys-banner'), crime: $('.sys-crime'), prompt: $('.sys-prompt'), fade: $('.sys-fade'),
@@ -95,8 +104,9 @@ export function createUI({ camera, audio }) {
       if (_p.z < -0.5) {
         _p.applyMatrix4(camera.projectionMatrix);
         if (Math.abs(_p.x) < 0.85 && Math.abs(_p.y) < 0.8) {
-          const sx = (_p.x * 0.5 + 0.5) * innerWidth + 26, sy = (-_p.y * 0.5 + 0.5) * innerHeight;
-          const pk = Math.min(innerWidth - 320, sx).toFixed(0) + '|' + Math.max(80, Math.min(innerHeight * 0.62, sy)).toFixed(0);
+          // (i18n) RTL: the prompt sits to the LEFT of the object (its right edge at the anchor; see rtl.css)
+          const rtl = isRtl(), sx = (_p.x * 0.5 + 0.5) * innerWidth + (rtl ? -26 : 26), sy = (-_p.y * 0.5 + 0.5) * innerHeight;
+          const pk = (rtl ? Math.max(320, sx) : Math.min(innerWidth - 320, sx)).toFixed(0) + '|' + Math.max(80, Math.min(innerHeight * 0.62, sy)).toFixed(0);
           if (pk !== promptPos) { promptPos = pk; const [l, t] = pk.split('|'); el.prompt.style.left = l + 'px'; el.prompt.style.top = t + 'px'; el.prompt.style.bottom = 'auto'; }
           anchored = true;
         }
@@ -108,11 +118,11 @@ export function createUI({ camera, audio }) {
   }
 
   // ---------------------------------------------------------------- crime tracker
-  const crimeEls = { b: $('.sys-crime b'), t: $('.sys-crime .t'), s: $('.sys-crime small'), m: $('.sys-crime .meter i') }, crimeLast = {};
+  const crimeEls = { b: $('.sys-crime b'), t: $('.sys-crime .t'), s: $('.sys-crime small'), m: $('.sys-crime .meter i') }; crimeLast = {};
   const setText = (k, e, v) => { if (crimeLast[k] !== v) { crimeLast[k] = v; if (k === 'm') e.style.width = v; else e.textContent = v; } };
   function crime(c) {
     if (!c) { if (crimeLast.on) { crimeLast.on = false; el.crime.classList.remove('on'); } return; }
-    setText('b', crimeEls.b, c.title); setText('t', crimeEls.t, c.text || ''); setText('s', crimeEls.s, c.caption || 'CRIME IN PROGRESS');
+    setText('b', crimeEls.b, c.title); setText('t', crimeEls.t, c.text || ''); setText('s', crimeEls.s, c.caption || t('ui.crimeInProgress'));
     setText('m', crimeEls.m, ((c.meter ?? 1) * 100).toFixed(1) + '%');
     if (!crimeLast.on) { crimeLast.on = true; el.crime.classList.add('on'); }
   }
@@ -131,7 +141,7 @@ export function createUI({ camera, audio }) {
     const e = $('.sys-obj');
     if (!o) { if (objKey) { e.classList.remove('on'); objKey = ''; } return; }
     const k = o.cap + '|' + o.text; if (k !== objKey) { if (!objKey) e.classList.add('on'); objKey = k; e.querySelector('small').textContent = o.cap; e.querySelector('b').textContent = o.text; }
-    const dt = o.dist != null ? (o.dist > 1000 ? (o.dist / 1000).toFixed(1) + ' KM' : (Math.round(o.dist / 5) * 5) + ' M') : '';
+    const dt = o.dist != null ? (o.dist > 1000 ? t('dist.KM', { n: (o.dist / 1000).toFixed(1) }) : t('dist.M', { n: Math.round(o.dist / 5) * 5 })) : '';
     if (dt !== objDist) { objDist = dt; e.querySelector('span').textContent = dt; }
   }
   function flash() { const f = $('.sys-snap'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
@@ -162,7 +172,7 @@ export function createUI({ camera, audio }) {
       if (d._tf !== tf) { d._tf = tf; d.style.transform = tf; }
       const al = it.alpha ?? 1; if (d._al !== al) { d._al = al; d.style.opacity = al; }
       if (d._hid) { d._hid = false; d.style.display = ''; }
-      const txt = it.label ?? (it.dist != null ? `${Math.round(it.dist)}m` : '');
+      const txt = it.label ?? (it.dist != null ? t('dist.pin', { n: Math.round(it.dist) }) : '');
       const dd = d.querySelector('.d'); if (dd.textContent !== txt) dd.textContent = txt;
       n++;
     }

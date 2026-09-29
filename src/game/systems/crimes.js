@@ -22,12 +22,14 @@ import { roadGraph } from './route.js';
 import { loadVehicleModels } from '../../world/vehicles.js';
 import { createPartMaterial } from '../../world/partmat.js';
 import { createActors } from './crimeactors.js';
+import { t, localize } from '../../ui/i18n.js';
 
 const TYPES = {
   mugging: { title: 'Mugging', text: 'A civilian is being robbed', icon: 'mugging', xp: 300, engage: 26, thugs: 2 },
   bankAlarm: { title: 'Bank Robbery', text: 'Alarm triggered at a bank', icon: 'alarm', xp: 450, engage: 34, thugs: 3 },
   carChase: { title: 'Car Chase', text: 'Armed suspects fleeing police', icon: 'chase', xp: 500, engage: 60, thugs: 0 },
 };
+for (const k in TYPES) localize(TYPES[k], 'crime.' + k, ['title', 'text']); // (i18n)
 const _v = new THREE.Vector3();
 
 export function createCrimes(sys) {
@@ -133,7 +135,7 @@ export function createCrimes(sys) {
     const { pos } = spot;
     const T = TYPES[type];
     const c = active = {
-      id: 'crime_' + (++seq), type, title: T.title, text: T.text, icon: T.icon, pos, district: data.districtAt(pos.x, pos.z).id,
+      id: 'crime_' + (++seq), type, get title() { return T.title; }, get text() { return T.text; }, icon: T.icon, pos, district: data.districtAt(pos.x, pos.z).id,
       state: 'active', claimed: false, t: 0, meter: 0, limit: type === 'carChase' ? 150 : 110, enemies: [], thugs: [], victim: null,
       suspended: false, hitCd: 0, dev: !!opts.dev,
       claim() { this.claimed = true; },
@@ -143,12 +145,12 @@ export function createCrimes(sys) {
     emit('crime:spawn', c);
     emit('crime:zone', { id: c.id, pos: c.pos.clone(), radius: 15, active: true, type });
     audio.sfx.crime();
-    ui.toast({ title: 'Crime in Progress', text: `${T.title} — ${data.districts.find(d => d.id === c.district).name}`, icon: T.icon, sound: null });
+    ui.toast({ title: t('crime.inProgress'), text: `${T.title} — ${data.districts.find(d => d.id === c.district).name}`, icon: T.icon, sound: null });
     const dn = data.districts.find(d => d.id === c.district).name;
     const lines = { mugging: [['Dispatch', `Report of a mugging in progress, ${dn}. Any units in the area?`], ['Unit 12', 'Ten-four, en route. Three minutes out.']],
       bankAlarm: [['Dispatch', `Silent alarm tripped at a bank in ${dn}. Suspects may be armed.`], ['Sergeant', 'All units, set up a perimeter. Nobody goes in alone.']],
       carChase: [['Unit 7', `We're in pursuit of a black sedan, heading through ${dn}!`], ['Dispatch', 'Copy, Unit 7. Do not lose that vehicle.']] }[type];
-    for (const [w, t] of lines) ui.subtitle?.(w, t);
+    lines.forEach(([w, line], i) => ui.subtitle?.(t('speaker.' + w, null, w), t(`radio.${type}.${i}`, { d: dn }, line))); // (i18n)
     return c;
   }
 
@@ -178,11 +180,11 @@ export function createCrimes(sys) {
       st.crimes.stopped++; st.crimes.byType[c.type] = (st.crimes.byType[c.type] || 0) + 1; st.crimes.byDistrict[c.district] = (st.crimes.byDistrict[c.district] || 0) + 1;
       save.markDirty();
       audio.sfx.success();
-      ui.toast({ title: 'Crime Stopped', text: c.victim ? `${c.title} — "Thanks, Spider-Man!"` : c.title, icon: c.icon, tone: 'gold', sound: null });
+      ui.toast({ title: t('crime.stopped'), text: c.victim ? `${c.title} — ${t('crime.thanks')}` : c.title, icon: c.icon, tone: 'gold', sound: null });
       prog.addXp(TYPES[c.type].xp, 'crime');
       emit('crime:resolved', c);
     } else {
-      ui.toast({ title: reason === 'expired' ? 'Suspects Escaped' : 'Crime Failed', text: c.title, icon: c.icon, sound: 'deny' });
+      ui.toast({ title: t(reason === 'expired' ? 'crime.escaped' : 'crime.failed'), text: c.title, icon: c.icon, sound: 'deny' });
       emit(reason === 'expired' ? 'crime:expired' : 'crime:failed', c);
     }
     ui.crime(null); sys.markers.setCrime(null); sys.markers.setCrimeColumn(true);
@@ -323,7 +325,7 @@ export function createCrimes(sys) {
     if (ride.pending) {
       if (s.mode === 'zip') { // home the zip onto the moving roof
         const Z = s.zip; Z.target.copy(R); Z.p2.copy(R); Z.p2.y += 0.95;
-      } else if (s.mode === 'perch' && s.pos.distanceTo(R) < 3) { ride.pending = false; ride.on = true; ride.last.copy(R); ui.toast({ title: 'On the Car', text: 'Hold [F] to web it to the road', icon: 'chase', ms: 3000, sound: null }); }
+      } else if (s.mode === 'perch' && s.pos.distanceTo(R) < 3) { ride.pending = false; ride.on = true; ride.last.copy(R); ui.toast({ title: t('crime.onCar'), text: t('crime.onCarText'), icon: 'chase', ms: 3000, sound: null }); }
       else { ride.pending = false; }
     }
     if (ride.on) {
@@ -413,7 +415,7 @@ export function createCrimes(sys) {
       if (c.suspended) {
         c.suspendT += dt; chase?.update(dt, true);
         if (d < 260) c.suspended = false;
-        else { if (c.suspendT > 240) finish(false, 'expired'); else ui.crime({ title: c.title, text: `Suspended — return to the scene · ${Math.round(dh)} m`, meter: Math.max(0, 1 - c.t / c.limit), caption: 'CRIME ON HOLD' }); return; }
+        else { if (c.suspendT > 240) finish(false, 'expired'); else ui.crime({ title: c.title, text: t('crime.suspended', { n: Math.round(dh) }), meter: Math.max(0, 1 - c.t / c.limit), caption: t('crime.onHold') }); return; }
       }
       chase?.update(dt, false);
       c.t += dt;
@@ -432,7 +434,7 @@ export function createCrimes(sys) {
           for (const th of c.thugs) if (th.bully && !th.then && Math.random() < dt * 0.5) { th.play('thugPunch2', { fade: 0.1, then: 'thugIdle' }); setTimeout(() => th.bully?.play('thugStumbleBack', { fade: 0.08, then: 'jumpCrouch' }), 230); }
         }
       }
-      let tracker = { title: c.title, text: `${Math.round(dh)} m`, meter: Math.max(0, 1 - c.t / c.limit), caption: 'CRIME IN PROGRESS' };
+      let tracker = { title: c.title, text: t('dist.m', { n: Math.round(dh) }), meter: Math.max(0, 1 - c.t / c.limit), caption: t('ui.crimeInProgress') };
       if (c.claimed && !c.handedOff) { c.handedOff = true; for (const th of c.thugs) { th.external = true; th.move = null; } }
       if (!c.claimed && c.handedOff) { c.handedOff = false; for (const th of c.thugs) th.external = false; } // combat released it
       // watchdog (fallback only): combat normally emits 'crime:cleared'. While combat owns the crime we count every
@@ -459,19 +461,19 @@ export function createCrimes(sys) {
           if (chase) chase.car.target = d < 30 ? 12 : 18; // it's harder to shake Spider-Man up close
           // the only way to win is holding [F] (web the car); the meter shows the escape clock
           c.meter = Math.max(0, 1 - c.t / c.limit);
-          tracker = { title: 'Stop the Getaway Car', text: ride.on ? 'Hold [F] — web the car' : d < 40 ? '[F] Web-zip onto the car' : `Catch up — ${Math.round(dh)} m`, meter: c.meter, caption: 'CAR CHASE' };
+          tracker = { title: t('crime.stopCar'), text: ride.on ? t('crime.holdWeb') : d < 40 ? t('crime.zipOnto') : t('crime.catchUp', { n: Math.round(dh) }), meter: c.meter, caption: t('crime.carChaseCap') };
           if (c.t > c.limit) { finish(false, 'expired'); return; }
           if (d > 320) { finish(false); return; }
         } else {
           fallbackFight(c, dt, p);
           const left = c.thugs.filter(t => !t.down).length, total = c.thugs.length;
           c.meter = total ? 1 - left / total : 1;
-          tracker = { title: c.type === 'bankAlarm' ? 'Stop the Robbers' : 'Stop the Muggers', text: left ? `${left} of ${total} left — [F] Web Strike` : 'Area clear', meter: c.meter, caption: c.title.toUpperCase() };
+          tracker = { title: t(c.type === 'bankAlarm' ? 'crime.stopRobbers' : 'crime.stopMuggers'), text: left ? t('crime.leftStrike', { a: left, b: total }) : t('crime.areaClear'), meter: c.meter, caption: c.title.toUpperCase() };
           if (total && !left) { emit('crime:cleared', { id: c.id }); return; }
           if (!total && d < 6) { emit('crime:cleared', { id: c.id }); return; } // actors failed to load
           if (d > 160) { finish(false); return; }
         }
-      } else if (c.claimed) tracker = { title: c.type === 'bankAlarm' ? 'Stop the Robbers' : 'Stop the Muggers', text: c.cmbTotal ? `${c.cmbLeft} of ${c.cmbTotal} left` : 'Take them down', meter: c.meter, caption: c.title.toUpperCase() };
+      } else if (c.claimed) tracker = { title: t(c.type === 'bankAlarm' ? 'crime.stopRobbers' : 'crime.stopMuggers'), text: c.cmbTotal ? t('crime.left', { a: c.cmbLeft, b: c.cmbTotal }) : t('crime.takeDown'), meter: c.meter, caption: c.title.toUpperCase() };
       ui.crime(tracker);
     },
     interact(p) {
@@ -479,12 +481,12 @@ export function createCrimes(sys) {
       if (c.type === 'carChase') {
         if (!chase || chase.car.stopped) return null;
         const R = chase.roof(), d = R.distanceTo(p);
-        if (ride.on || d < 7) return { id: c.id + 'web', pos: R.clone().setY(R.y + 0.6), label: 'Web the Car', sub: 'Pin it to the road', hold: 2.0, priority: 10, tick: k => audio.sfx.thwip(0.5 + k * 0.6), action: () => webCar(c) };
-        if (d < 45 && ctx.player.traversal?.forceZip) return { id: c.id + 'zip', pos: R.clone().setY(R.y + 0.8), label: 'Web-Zip to Car', sub: 'Getaway car', hold: 0, priority: 10, action: () => zipToCar() };
+        if (ride.on || d < 7) return { id: c.id + 'web', pos: R.clone().setY(R.y + 0.6), label: t('prompt.webCar'), sub: t('prompt.pinRoad'), hold: 2.0, priority: 10, tick: k => audio.sfx.thwip(0.5 + k * 0.6), action: () => webCar(c) };
+        if (d < 45 && ctx.player.traversal?.forceZip) return { id: c.id + 'zip', pos: R.clone().setY(R.y + 0.8), label: t('prompt.zipCar'), sub: t('prompt.getaway'), hold: 0, priority: 10, action: () => zipToCar() };
         return null;
       }
       const th = nearestStanding(c, p); if (!th) return null;
-      return { id: c.id + th.id, pos: th.root.position.clone().setY(th.root.position.y + 1.9), label: 'Web Strike', sub: th.hp > 1 ? 'Thug' : 'Finish him', hold: 0, priority: 9,
+      return { id: c.id + th.id, pos: th.root.position.clone().setY(th.root.position.y + 1.9), label: t('prompt.webStrike'), sub: t(th.hp > 1 ? 'prompt.thug' : 'prompt.finishHim'), hold: 0, priority: 9,
         action: () => { th.face(p); const k = th.hit(); ctx.player.cam?.shake?.(k ? 0.2 : 0.1); audio.sfx.thwip(1.1); audio.sfx.land?.(k ? 0.5 : 0.25); ctx.player.playGesture?.('strike'); } };
     },
     pins(p, out) {

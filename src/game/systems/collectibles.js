@@ -5,6 +5,7 @@
 //   secret photos – find the spot matching Peter's old (sepia) photo and look the same way -> [F]
 import * as THREE from 'three';
 import { emit } from './events.js';
+import { t } from '../../ui/i18n.js';
 
 const _v = new THREE.Vector3(), _d = new THREE.Vector3(), _f = new THREE.Vector3();
 
@@ -24,9 +25,9 @@ export function createCollectibles(sys) {
     try { ctx.player.playGesture?.('pickup'); ctx.player.onPickup?.(info); } catch (e) { console.warn(e); }
     emit('collectible:pickup', info);
     audio.sfx.thwip(0.6); audio.sfx.pickup();
-    ui.toast({ title: 'Backpack Found', text: b.item, icon: 'backpack', count: `${st().backpacks.length}/${data.backpacks.length}`, sound: null, tone: 'gold' });
+    ui.toast({ title: t('coll.backpackFound'), text: b.item, icon: 'backpack', count: `${st().backpacks.length}/${data.backpacks.length}`, sound: null, tone: 'gold' });
     prog.addXp(150, 'backpack');
-    if (st().backpacks.length === data.backpacks.length) ui.banner('ALL BACKPACKS FOUND', 'Memory Lane', 'Every one of Peter\'s old backpacks recovered', 'levelUp');
+    if (st().backpacks.length === data.backpacks.length) ui.banner(t('coll.allPacksCap'), t('coll.allPacksBig'), t('coll.allPacksSub'), 'levelUp');
   }
 
   // ---------------------------------------------------------------- landmark photography
@@ -54,7 +55,7 @@ export function createCollectibles(sys) {
     if (st().landmarks.includes(lm.id)) return false;
     st().landmarks.push(lm.id); if (thumb) st().photoThumbs[lm.id] = thumb; save.markDirty();
     emit('collectible:photo', { kind: 'landmark', id: lm.id, name: lm.name });
-    ui.toast({ title: 'Landmark Photographed', text: lm.name, icon: 'landmark', count: `${st().landmarks.length}/${data.landmarks.length}`, tone: 'cyan' });
+    ui.toast({ title: t('coll.landmarkShot'), text: lm.name, icon: 'landmark', count: `${st().landmarks.length}/${data.landmarks.length}`, tone: 'cyan' });
     prog.addXp(200 * (ctx.params?.photoXp ?? 1), 'landmark');
     return true;
   }
@@ -67,7 +68,7 @@ export function createCollectibles(sys) {
     if (st().secretPhotos.includes(sp.id)) return false;
     st().secretPhotos.push(sp.id); if (thumb) st().photoThumbs[sp.id] = thumb; save.markDirty();
     emit('collectible:photo', { kind: 'secretPhoto', id: sp.id, name: sp.name });
-    ui.toast({ title: 'Secret Photo Matched', text: data.districts.find(d => d.id === sp.district).name, icon: 'photo', count: `${st().secretPhotos.length}/${data.secretPhotos.length}`, tone: 'gold' });
+    ui.toast({ title: t('coll.secretMatched'), text: data.districts.find(d => d.id === sp.district).name, icon: 'photo', count: `${st().secretPhotos.length}/${data.secretPhotos.length}`, tone: 'gold' });
     prog.addXp(300 * (ctx.params?.photoXp ?? 1), 'secretPhoto');
     return true;
   }
@@ -135,15 +136,15 @@ export function createCollectibles(sys) {
         const dh = Math.hypot(b.pos.x - p.x, b.pos.z - p.z), dy = b.pos.y - p.y;
         if (dh < 4.5 && dy < 8 && dy > -3 && dh + Math.abs(dy) * 0.3 < bd) { bd = dh + Math.abs(dy) * 0.3; best = b; }
       }
-      if (best) { const b = best; return { id: b.id, pos: b.pos, label: 'Grab Backpack', sub: 'Web-pull', hold: 0, priority: 6, action: () => pickupBackpack(b) }; }
+      if (best) { const b = best; return { id: b.id, pos: b.pos, label: t('prompt.grabPack'), sub: t('prompt.webPull'), hold: 0, priority: 6, action: () => pickupBackpack(b) }; }
       for (const sp of data.secretPhotos) {
         if (!st().secretPhotos.includes(sp.id) && inSecretSpot(sp, p, camera)) {
-          return { id: sp.id, label: 'Match Secret Photo', sub: 'This looks like the spot', hold: 0, priority: 4, action: () => { photoSecret(sp); sys.photo.snap(t => storeThumb(sp.id, t)); } };
+          return { id: sp.id, label: t('prompt.matchPhoto'), sub: t('prompt.theSpot'), hold: 0, priority: 4, action: () => { photoSecret(sp); sys.photo.snap(t => storeThumb(sp.id, t)); } };
         }
       }
       for (const lm of data.landmarks) {
         if (st().landmarks.includes(lm.id)) continue;
-        if (photographable(lm, camera)) return { id: lm.id, label: 'Photograph Landmark', sub: lm.name, hold: 0, priority: 3, action: () => { photoLandmark(lm); sys.photo.snap(t => storeThumb(lm.id, t)); } };
+        if (photographable(lm, camera)) return { id: lm.id, label: t('prompt.photoLandmark'), sub: lm.name, hold: 0, priority: 3, action: () => { photoLandmark(lm); sys.photo.snap(t => storeThumb(lm.id, t)); } };
       }
       return null;
     },

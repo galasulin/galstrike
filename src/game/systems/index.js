@@ -28,6 +28,7 @@ import { createPauseMenu } from '../../ui/menus/pause.js';
 import { createTitle } from '../../ui/menus/title.js';
 import { createPhotoUI } from '../../ui/menus/photo.js';
 import { createTouch } from '../../ui/touch.js';
+import { t as i18nT, bindSave } from '../../ui/i18n.js';
 
 function detectGpuTier(renderer) {
   let name = '';
@@ -46,6 +47,7 @@ export function initSystems(ctx) {
   if (q.has('shot')) return null; // deterministic screenshot mode: no open-world systems
   const t0 = performance.now();
   const save = createSave();
+  bindSave(save); // (i18n) settings.lang: first run takes the browser language
   // (GalStrike) first run: pick a preset that fits the GPU (integrated GPUs choke on 'high': 5 shadow cascades, SSGI, SSR)
   // Re-checked every load until the player picks a preset by hand (qualityManual): on laptops the browser can move from
   // the integrated GPU to the discrete one (Windows graphics settings), and the preset should follow.
@@ -134,8 +136,8 @@ export function initSystems(ctx) {
   on('xp:gain', e => { ui.xp({ level: prog.level, xp: prog.xp, need: prog.need, gain: e.amount, leveled: e.leveled }); if (!e.leveled) audio.sfx.xp(); });
   on('level:up', e => {
     const n = e.gained || 1;
-    ui.banner('LEVEL UP', `LEVEL ${e.level}`, `+${n} Skill Point${n > 1 ? 's' : ''} — open the pause menu to spend ${n > 1 ? 'them' : 'it'}`, 'levelUp');
-    for (const s of SUITS) if (s.level > (e.from ?? e.level - 1) && s.level <= e.level) ui.toast({ title: 'Suit Unlocked', text: s.name, icon: 'xp', tone: 'gold' });
+    ui.banner(i18nT('lvl.cap'), i18nT('lvl.big', { n: e.level }), i18nT('lvl.sub', { n }), 'levelUp');
+    for (const s of SUITS) if (s.level > (e.from ?? e.level - 1) && s.level <= e.level) ui.toast({ title: i18nT('suit.unlocked'), text: s.name, icon: 'xp', tone: 'gold' });
   });
 
   // ---------------------------------------------------------------- interaction ([F])
@@ -254,8 +256,8 @@ export function initSystems(ctx) {
     districtT += dt;
     if (districtT > 1.5 && shownId !== d.id && performance.now() - lastShown > 25000) {
       shownId = d.id; lastShown = performance.now();
-      if (sys.towers.revealed(d.id)) ui.toast({ title: d.name, text: 'District', icon: 'landmark', sound: null, ms: 3000, tone: 'cyan' });
-      else ui.toast({ title: d.name, text: 'Signal scrambled — find the research tower', icon: 'tower', sound: null, ms: 3800, tutorial: true, valid: () => !sys.towers.revealed(d.id) && !inCombat });
+      if (sys.towers.revealed(d.id)) ui.toast({ title: d.name, text: i18nT('district'), icon: 'landmark', sound: null, ms: 3000, tone: 'cyan' });
+      else ui.toast({ title: d.name, text: i18nT('district.scrambled'), icon: 'tower', sound: null, ms: 3800, tutorial: true, valid: () => !sys.towers.revealed(d.id) && !inCombat });
     }
   }
 
@@ -288,7 +290,7 @@ export function initSystems(ctx) {
 
   // first-run onboarding
   if (!save.state.towers.length && save.state.xp === 0 && save.state.level === 1) {
-    setTimeout(() => ui.toast({ title: 'Research Towers', text: 'Activate towers to reveal districts, collectibles and fast travel. Esc / M opens the map.', icon: 'tower', ms: 7000, tutorial: true, valid: () => !save.state.towers.length && !inCombat }), 3500);
+    setTimeout(() => ui.toast({ title: i18nT('tut.towers'), text: i18nT('tut.towersText'), icon: 'tower', ms: 7000, tutorial: true, valid: () => !save.state.towers.length && !inCombat }), 3500);
   }
 
   // ---------------------------------------------------------------- combat: keep the screen clear while fighting
@@ -338,8 +340,8 @@ export function initSystems(ctx) {
       const wp = sys.travel.waypoint;
       if (inCombat) ui.objective(null);
       else if (sys.missions.active) ui.objective(sys.missions.objective(p)); // a running mission owns the objective panel
-      else if (wp) { const d = Math.hypot(wp.x - p.x, wp.z - p.z); pinList.push({ kind: 'label', pos: wp.clone().setY(wp.y - 1.2), label: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m', edge: false }); ui.objective({ cap: 'Waypoint', text: 'Travel to the marked location', dist: sys.travel.routeLength ?? d }); }
-      else if (!sys.crimes.active) { const t = sys.towers.nearestInactive(p); if (t) ui.objective({ cap: 'Objective', text: `Activate the ${data.districts.find(x => x.id === t.district).name} tower`, dist: Math.hypot(t.pos.x - p.x, t.pos.z - p.z) }); else ui.objective(null); }
+      else if (wp) { const d = Math.hypot(wp.x - p.x, wp.z - p.z); pinList.push({ kind: 'label', pos: wp.clone().setY(wp.y - 1.2), label: d > 1000 ? i18nT('dist.km', { n: (d / 1000).toFixed(1) }) : i18nT('dist.m', { n: Math.round(d) }), edge: false }); ui.objective({ cap: i18nT('obj.waypoint'), text: i18nT('obj.waypointText'), dist: sys.travel.routeLength ?? d }); }
+      else if (!sys.crimes.active) { const t = sys.towers.nearestInactive(p); if (t) ui.objective({ cap: i18nT('obj.cap'), text: i18nT('obj.activateTower', { d: data.districts.find(x => x.id === t.district).name }), dist: Math.hypot(t.pos.x - p.x, t.pos.z - p.z) }); else ui.objective(null); }
       else ui.objective(null);
       ui.pins(pinList, save.state.settings.showPins !== false);
       mmList.length = 0;

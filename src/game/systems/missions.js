@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { on, emit } from './events.js';
 import { onLand } from '../../world/layout.js';
+import { t, localize } from '../../ui/i18n.js';
 
 export const MISSIONS = [
   { id: 'm1', title: 'Signal Lost', district: 'mid', par: 240,
@@ -46,12 +47,13 @@ export const MISSIONS = [
     obj: [{ type: 'race', x: 0, z0: -3000, dir: 1, n: 10, sp: 80, limit: 90 }, { type: 'defeat', n: 8 }, { type: 'reach', landmark: 'park' }] },
 ];
 
+for (const m of MISSIONS) localize(m, 'mission.' + m.id, ['title', 'blurb']); // (i18n) intro lines: mission.<id>.intro.<i>, speakers: speaker.<name>
+
 const PTS = { reach: 300, tower: 500, crimes: 400, defeat: 60, collect: 300, race: 150, raceEnd: 300, photo: 400 };
 const BONUS = { time: 1500, clean: 1000, combo: 600, air: 400 }; // style = combo (only counted in missions with fights) + air time
-const CRIME_NAMES = { mugging: 'muggings', bankAlarm: 'bank robberies', carChase: 'getaway cars' };
 const RING_R = 7;
 export const rankOf = pct => (pct >= 0.85 ? 'S' : pct >= 0.7 ? 'A' : pct >= 0.5 ? 'B' : 'C');
-const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+export const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const _a = new THREE.Vector3(), _b = new THREE.Vector3();
 
 export function createMissions(sys) {
@@ -77,13 +79,13 @@ export function createMissions(sys) {
   function describe(o, st = null) {
     const k = st ? `${st.count}/${st.need}` : '';
     switch (o.type) {
-      case 'reach': return o.landmark ? `Swing to ${lmOf(o.landmark)?.name || dName(o.landmark)}` : `Head to ${dName(o.district)}`;
-      case 'tower': return (st ? st.sync : sys.towers.isActive('tower_' + o.district)) ? `Sync the ${dName(o.district)} tower` : `Activate the ${dName(o.district)} tower`;
-      case 'crimes': return `Stop ${o.crime ? CRIME_NAMES[o.crime] : 'crimes'}${k ? ' ' + k : ` (${o.n})`}`;
-      case 'defeat': return `Defeat enemies${k ? ' ' + k : ` (${o.n})`}`;
-      case 'collect': return `Recover backpacks${k ? ' ' + k : ` (${o.n})`}`;
-      case 'race': return st ? (st.started ? `Checkpoints ${k} · ${fmtT(Math.max(0, o.limit - st.rt))}` : 'Reach the first relay ring') : `Relay race: ${o.n} rings in ${o.limit}s`;
-      case 'photo': return `Photograph ${lmOf(o.landmark)?.name || dName(o.landmark)}`;
+      case 'reach': return o.landmark ? t('mobj.swingTo', { x: lmOf(o.landmark)?.name || dName(o.landmark) }) : t('mobj.headTo', { x: dName(o.district) });
+      case 'tower': return t((st ? st.sync : sys.towers.isActive('tower_' + o.district)) ? 'mobj.sync' : 'mobj.activate', { d: dName(o.district) });
+      case 'crimes': return t('mobj.crimes.' + (o.crime || 'any'), { k: k ? ' ' + k : ` (${o.n})` });
+      case 'defeat': return t('mobj.defeat', { k: k ? ' ' + k : ` (${o.n})` });
+      case 'collect': return t('mobj.collect', { k: k ? ' ' + k : ` (${o.n})` });
+      case 'race': return st ? (st.started ? t('mobj.checkpoints', { k, t: fmtT(Math.max(0, o.limit - st.rt)) }) : t('mobj.firstRing')) : t('mobj.race', { n: o.n, s: o.limit });
+      case 'photo': return t('mobj.photo', { x: lmOf(o.landmark)?.name || dName(o.landmark) });
     }
     return '';
   }
@@ -99,13 +101,13 @@ export function createMissions(sys) {
 
   function showResult(r) {
     result = r; resultT = r.ok ? 12 : 20;
-    const rows = r.ok ? [['Objectives', r.obj], ['Time bonus', r.time, fmtT(r.t)], ['No-damage bonus', r.clean, r.dmg ? `${Math.round(r.dmg)} dmg taken` : 'untouched'], ['Style', r.style, `combo x${r.combo} · ${Math.round(r.air)}s air`]] : [];
-    res.innerHTML = `<div class="box ${r.ok ? '' : 'fail'}"><small>${r.ok ? 'MISSION COMPLETE' : 'MISSION FAILED'}</small><h3></h3>
+    const rows = r.ok ? [[t('mres.objectives'), r.obj], [t('mres.time'), r.time, fmtT(r.t)], [t('mres.clean'), r.clean, r.dmg ? t('mres.dmg', { n: Math.round(r.dmg) }) : t('mres.untouched')], [t('mres.style'), r.style, t('mres.styleSub', { c: r.combo, a: Math.round(r.air) })]] : [];
+    res.innerHTML = `<div class="box ${r.ok ? '' : 'fail'}"><small>${r.ok ? t('mres.complete') : t('mres.failed')}</small><h3></h3>
       ${r.ok ? `<div class="rk rk-${r.rank}">${r.rank}</div>` : '<p class="why"></p>'}
-      ${rows.map(([n, v, d]) => `<div class="ln"><span>${n}${d ? `<i>${d}</i>` : ''}</span><b>+${v}</b></div>`).join('')}
-      ${r.ok ? `<div class="ln tot"><span>Score${r.best ? '<em>NEW BEST</em>' : ''}</span><b>${r.score}</b></div><div class="xp">+${r.xp} XP</div>` : ''}
-      <div class="keys">${r.ok ? '<span><span class="sys-key">Enter</span>Continue</span>' : '<span><span class="sys-key">Enter</span>Retry</span><span><span class="sys-key">Backspace</span>Dismiss</span>'}</div></div>`;
-    res.querySelector('h3').textContent = r.title; if (!r.ok) res.querySelector('.why').textContent = r.reason;
+      ${rows.map(([n, v, d]) => `<div class="ln"><span>${n}${d ? `<i>${d}</i>` : ''}</span><b><bdi>+${v}</bdi></b></div>`).join('')}
+      ${r.ok ? `<div class="ln tot"><span>${t('mres.score')}${r.best ? `<em>${t('mres.newBest')}</em>` : ''}</span><b>${r.score}</b></div><div class="xp"><bdi>+${r.xp} XP</bdi></div>` : ''}
+      <div class="keys">${r.ok ? `<span><span class="sys-key">Enter</span>${t('key.continue')}</span>` : `<span><span class="sys-key">Enter</span>${t('key.retry')}</span><span><span class="sys-key">Backspace</span>${t('key.dismiss')}</span>`}</div></div>`;
+    res.querySelector('h3').textContent = r.title; if (!r.ok) res.querySelector('.why').textContent = r.reasonKey ? t(r.reasonKey) : r.reason;
     res.classList.remove('on'); void res.offsetWidth; res.classList.add('on');
   }
   function hideResult() { result = null; res.classList.remove('on'); }
@@ -170,7 +172,7 @@ export function createMissions(sys) {
     emit('mission:objective', { id: M.def.id, index: M.idx, type: o.type });
     if (o.type === 'collect' && st.need <= 0) { advance(true); return; } // every backpack already found: nothing to do
     const tg = targetOf(st); if (tg && o.type !== 'crimes' && o.type !== 'defeat') setWp(tg.x, tg.z); else setWp(null);
-    if (M.idx > 0) ui.toast({ title: 'New Objective', text: describe(o), icon: 'waypoint', tone: 'gold', ms: 3200 });
+    if (M.idx > 0) ui.toast({ title: t('mis.newObjective'), text: describe(o), icon: 'waypoint', tone: 'gold', ms: 3200 });
   }
   function advance(skipPts = false) {
     const st = M.objs[M.idx];
@@ -194,8 +196,8 @@ export function createMissions(sys) {
     M = { def, idx: 0, t: 0, objs: def.obj.map(o => ({ o, count: 0, need: o.n || 1 })), pts: 0, dmg: 0, combo: 0, air: 0 };
     prevPos.copy(ctx.player.position);
     const n = MISSIONS.indexOf(def) + 1;
-    ui.banner(`MISSION ${n}`, def.title, def.blurb, 'district');
-    def.intro.forEach(([w, t], i) => setTimeout(() => { if (M?.def === def) ui.subtitle(w, t, 4200); }, 900 + i * 50));
+    ui.banner(t('mis.n', { n }), def.title, def.blurb, 'district');
+    def.intro.forEach(([w, line], i) => setTimeout(() => { if (M?.def === def) ui.subtitle(t('speaker.' + w, null, w), t(`mission.${def.id}.intro.${i}`, null, line), 4200); }, 900 + i * 50));
     hud.classList.add('on');
     beginObjective();
     emit('mission:start', { id });
@@ -226,23 +228,23 @@ export function createMissions(sys) {
     cleanup();
     audio.sfx.levelUp?.();
     prog.addXp(xp, 'mission');
-    showResult({ ok: true, id: def.id, title: def.title, ...b, best: best && !!prev, xp });
+    showResult({ ok: true, id: def.id, get title() { return def.title; }, ...b, best: best && !!prev, xp });
     const next = MISSIONS[MISSIONS.indexOf(def) + 1];
-    if (first && next) setTimeout(() => ui.toast({ title: 'Mission Unlocked', text: `${next.title} — pause menu › Missions`, icon: 'xp', tone: 'gold' }), 2500);
-    else if (first && !next) setTimeout(() => ui.banner('STORY COMPLETE', 'Manhattan Protected', `Total mission score ${s.total}`, 'levelUp'), 1500);
+    if (first && next) setTimeout(() => ui.toast({ title: t('mis.unlocked'), text: t('mis.unlockedText', { m: next.title }), icon: 'xp', tone: 'gold' }), 2500);
+    else if (first && !next) setTimeout(() => ui.banner(t('mis.storyComplete'), t('mis.storyBig'), t('mis.storyTotal', { n: s.total }), 'levelUp'), 1500);
     emit('mission:complete', { id: def.id, score: b.score, rank: b.rank });
   }
-  function fail(reason = 'Mission failed') {
+  function fail(reason = 'Mission failed', reasonKey = 'mfail.generic') {
     if (!M) return;
     const def = M.def; cleanup();
     audio.sfx.deny?.();
-    showResult({ ok: false, id: def.id, title: def.title, reason });
+    showResult({ ok: false, id: def.id, get title() { return def.title; }, reason, reasonKey });
     emit('mission:failed', { id: def.id, reason });
   }
   function abandon() {
     if (!M) return false;
     const id = M.def.id; cleanup();
-    ui.toast({ title: 'Mission Abandoned', text: MISSIONS.find(m => m.id === id).title, icon: 'waypoint', sound: 'deny' });
+    ui.toast({ title: t('mis.abandoned'), text: MISSIONS.find(m => m.id === id).title, icon: 'waypoint', sound: 'deny' });
     emit('mission:abandon', { id });
     return true;
   }
@@ -250,7 +252,7 @@ export function createMissions(sys) {
   // ---------------------------------------------------------------- world events -> objectives
   const cur = () => (M ? M.objs[M.idx] : null);
   on('player:hurt', e => { if (M) M.dmg += e?.dmg || 0; });
-  on('player:defeated', () => { const m = M; if (m) setTimeout(() => { if (M === m) fail('You were knocked out'); }, 1200); });
+  on('player:defeated', () => { const m = M; if (m) setTimeout(() => { if (M === m) fail('You were knocked out', 'mfail.ko'); }, 1200); });
   on('combat:enemyDown', e => { if (!M) return; M.combo = Math.max(M.combo, e?.combo || 0); const st = cur(); if (st?.o.type === 'defeat') progress(st, 1, PTS.defeat); });
   on('crime:resolved', c => { const st = cur(); if (st?.o.type === 'crimes' && (!st.o.crime || st.o.crime === c.type)) progress(st, 1, PTS.crimes); });
   on('tower:activated', e => { const st = cur(); if (st?.o.type === 'tower' && e.district === st.o.district) advance(); });
@@ -275,14 +277,14 @@ export function createMissions(sys) {
     }
     else if (o.type === 'race') {
       const r = st.rings[st.count];
-      if (st.started) { st.rt += dt; if (st.rt > o.limit) { fail('Out of time — the relay signal got away'); return; } }
+      if (st.started) { st.rt += dt; if (st.rt > o.limit) { fail('Out of time — the relay signal got away', 'mfail.time'); return; } }
       if (r) {
         // pass-through: the segment since last frame crosses the ring plane inside the ring (or we're simply in it)
         const d0 = _a.subVectors(prevPos, r.pos).dot(r.n), d1 = _b.subVectors(p, r.pos).dot(r.n);
         let hit = p.distanceTo(r.pos) < RING_R * 0.8;
         if (!hit && d0 * d1 <= 0 && d0 !== d1) { const k = d0 / (d0 - d1); _a.lerpVectors(prevPos, p, k); hit = _a.distanceTo(r.pos) < RING_R + 1.5; }
         if (hit) {
-          if (!st.started) { st.started = true; st.rt = 0; ui.toast({ title: 'Relay Race', text: `${o.limit} seconds — go!`, icon: 'swing', tone: 'gold', ms: 2200, sound: null }); }
+          if (!st.started) { st.started = true; st.rt = 0; ui.toast({ title: t('mis.relay'), text: t('mis.relayGo', { n: o.limit }), icon: 'swing', tone: 'gold', ms: 2200, sound: null }); }
           audio.sfx.thwip?.(1.3); progress(st, 1, PTS.race);
           if (cur() === st) { styleRings(st); const tg = targetOf(st); if (tg) setWp(tg.x, tg.z); }
         } else { r.m.rotation.z += dt * 0.8; const s = 1 + 0.06 * Math.sin(M.t * 5); r.m.scale.setScalar(s); }
@@ -292,7 +294,7 @@ export function createMissions(sys) {
     if (!M) return; // the objective above finished (or failed) the mission
     // HUD
     const n = MISSIONS.indexOf(M.def) + 1;
-    put('cap', `MISSION ${n}`); put('ttl', M.def.title); put('tm', fmtT(M.t)); put('sc', `${M.pts} PTS`);
+    put('cap', t('mis.n', { n })); put('ttl', M.def.title); put('tm', fmtT(M.t)); put('sc', t('mis.pts', { n: M.pts }));
     put('ob', describe(cur().o, cur()));
   }
 
@@ -302,17 +304,17 @@ export function createMissions(sys) {
     start, abandon, fail, update, describe,
     objective(p) {
       if (!M) return null; const st = cur(); const tg = targetOf(st);
-      return { cap: `Mission · ${M.def.title}`, text: describe(st.o, st), dist: tg ? Math.hypot(tg.x - p.x, tg.z - p.z) : null };
+      return { cap: t('mis.cap', { m: M.def.title }), text: describe(st.o, st), dist: tg ? Math.hypot(tg.x - p.x, tg.z - p.z) : null };
     },
     interact(p) {
       const st = cur(); if (!st) return null; const o = st.o;
       if (o.type === 'tower' && st.sync) {
-        const t = data.towers.find(x => x.district === o.district); const dh = Math.hypot(t.pos.x - p.x, t.pos.z - p.z), dy = p.y - t.pos.y;
-        if (dh < 9.5 && dy > -2 && dy < 8) return { id: 'ms_' + t.id, pos: t.panel || (t.panel = t.pos.clone().setY(t.pos.y + 2.2)), label: 'Sync Research Tower', sub: 'Purge the jammer', hold: 1.2, priority: 8, tick: k => audio.sfx.towerCharge?.(k), action: () => { sys.markers.pulse(t.pos); sys.markers.flareTower?.(t.id); advance(); } };
+        const tw = data.towers.find(x => x.district === o.district); const dh = Math.hypot(tw.pos.x - p.x, tw.pos.z - p.z), dy = p.y - tw.pos.y;
+        if (dh < 9.5 && dy > -2 && dy < 8) return { id: 'ms_' + tw.id, pos: tw.panel || (tw.panel = tw.pos.clone().setY(tw.pos.y + 2.2)), label: t('prompt.syncTower'), sub: t('prompt.purge'), hold: 1.2, priority: 8, tick: k => audio.sfx.towerCharge?.(k), action: () => { sys.markers.pulse(tw.pos); sys.markers.flareTower?.(tw.id); advance(); } };
       }
       if (o.type === 'photo') {
         const l = lmOf(o.landmark);
-        if (l && sys.collect.photographable(l, ctx.camera, 1.4)) return { id: 'mp_' + l.id, label: 'Photograph Landmark', sub: `${l.name} · Mission`, hold: 0, priority: 7, action: () => { if (!save.state.landmarks.includes(l.id)) sys.collect.photoLandmark(l); sys.photo.snap(); advance(); } };
+        if (l && sys.collect.photographable(l, ctx.camera, 1.4)) return { id: 'mp_' + l.id, label: t('prompt.photoLandmark'), sub: t('prompt.photoMission', { x: l.name }), hold: 0, priority: 7, action: () => { if (!save.state.landmarks.includes(l.id)) sys.collect.photoLandmark(l); sys.photo.snap(); advance(); } };
       }
       return null;
     },

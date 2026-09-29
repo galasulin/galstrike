@@ -2,6 +2,7 @@
 // it while the camera slowly orbits the player. Play (Enter / Space / click / gamepad A or Start) drops into the game.
 // Uses its own flow mode ('title') so the pause menu and gameplay input ignore it. ?notitle skips it.
 import * as THREE from 'three';
+import { t, lang, setLang, onLangChange } from '../i18n.js';
 
 const CSS = `
 .gs-title { position: fixed; inset: 0; z-index: 40; pointer-events: auto; display: flex; flex-direction: column; justify-content: flex-end;
@@ -17,7 +18,11 @@ const CSS = `
 .gs-title button { all: unset; cursor: pointer; font: 800 26px/1 'Spiderbench Condensed', 'Arial Narrow', sans-serif; letter-spacing: .08em;
   text-transform: uppercase; color: #aeb9d4; padding: 8px 18px 8px 14px; border-left: 3px solid transparent; transition: color .15s, border-color .15s, background .15s; }
 .gs-title button.sel { color: #fff; border-left-color: #e3262f; background: linear-gradient(90deg, rgba(227,38,47,.28), rgba(227,38,47,0)); }
-.gs-title .he { font-family: system-ui, sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 0; color: #8f9bb8; margin-inline-start: 12px; }
+/* (i18n) language toggle, top corner (inline-end) */
+.gs-title .lang { position: absolute; top: 4.5vh; inset-inline-end: 5vw; display: flex; border: 1px solid rgba(160,180,230,.3); background: rgba(6,12,28,.6); backdrop-filter: blur(6px); }
+.gs-title .lang button { font: 700 14px/1 var(--sys-body, sans-serif); letter-spacing: .12em; padding: 9px 14px; color: #aeb9d4; border: 0; text-transform: none; }
+.gs-title .lang button[data-l=he] { font-family: 'Heebo Variable', var(--sys-body, sans-serif); letter-spacing: 0; }
+.gs-title .lang button.on { background: #e3262f; color: #fff; }
 .gs-title .hint { margin-top: 30px; font-size: 13px; letter-spacing: .2em; color: #7d89a8; text-transform: uppercase; }
 /* quick setup panel: time & weather + sound, bottom right */
 .gs-title .panel { position: absolute; right: 5vw; bottom: 9vh; width: min(380px, 40vw); padding: 18px 20px; background: rgba(6,12,28,.72);
@@ -38,7 +43,7 @@ const CSS = `
 @media (max-width: 900px), (max-height: 560px) { .gs-title .panel { right: 3vw; bottom: 3vh; width: min(300px, 44vw); padding: 12px 14px; } }
 `;
 
-const TODS = [['day', 'Day'], ['morning', 'Morning'], ['sunset', 'Sunset'], ['dusk', 'Dusk'], ['night', 'Night'], ['overcast', 'Rain']];
+const TODS = ['day', 'morning', 'sunset', 'dusk', 'night', 'overcast']; // labels: title.tod.<id>
 
 // time & weather chips + volume sliders + mute, all writing the same settings the pause menu uses
 function setupPanel(sys, el) {
@@ -52,7 +57,8 @@ function setupPanel(sys, el) {
   const show = () => ranges.forEach(r => { r.value = S()[r.dataset.k] ?? 0.8; r.nextElementSibling.textContent = Math.round(r.value * 100) + '%'; });
   ranges.forEach(r => r.addEventListener('input', () => { S()[r.dataset.k] = +r.value; if (S().muted) S().muted = false; apply(); show(); markMute(); }));
   const mute = el.querySelector('.mute');
-  const markMute = () => { mute.textContent = S().muted ? 'Sound off · click to unmute' : 'Sound on · click to mute'; mute.classList.toggle('on', !!S().muted); };
+  const markMute = () => { mute.textContent = t(S().muted ? 'title.soundOffBtn' : 'title.soundOnBtn'); mute.classList.toggle('on', !!S().muted); };
+  onLangChange(markMute);
   mute.addEventListener('click', e => { e.stopPropagation(); toggleMute(sys); markMute(); });
   for (const ev of ['pointerdown', 'mousedown', 'click']) el.querySelector('.panel').addEventListener(ev, e => e.stopPropagation());
   show(); markMute();
@@ -61,7 +67,7 @@ function setupPanel(sys, el) {
 // mute keeps the chosen volumes: it only zeroes the master bus (audio.setVolumes reads masterVolume)
 export function toggleMute(sys) {
   const s = sys.save.state.settings; s.muted = !s.muted; sys.save.markDirty(); sys.applySettings?.();
-  sys.ui?.toast?.({ title: s.muted ? 'Sound off' : 'Sound on', text: s.muted ? 'Press N to unmute' : 'Press N to mute', ms: 1800 });
+  sys.ui?.toast?.({ title: t(s.muted ? 'title.soundOff' : 'title.soundOn'), text: t(s.muted ? 'title.pressUnmute' : 'title.pressMute'), ms: 1800 });
 }
 
 export function createTitle(sys) {
@@ -72,29 +78,43 @@ export function createTitle(sys) {
 
   const style = document.createElement('style'); style.textContent = CSS; document.head.appendChild(style);
   const el = document.createElement('div'); el.className = 'gs-title';
-  el.innerHTML = `<div class="kick">Manhattan · Open World</div>
-    <h1>GalStrike<i>.</i></h1>
-    <div class="by">A game by <b>Gal Asulin</b> · <span dir="rtl">משחק מאת גל אסולין</span></div>
+  // (i18n) every caption carries its dictionary key (data-i); GalStrike stays Latin. EN / עב toggle switches live.
+  el.innerHTML = `<div class="kick" data-i="title.kick"></div>
+    <h1 dir="ltr">GalStrike<i>.</i></h1>
+    <div class="by"></div>
     <nav>
-      <button data-a="play">Play<span class="he">שחק</span></button>
-      <button data-a="missions">Missions<span class="he">משימות</span></button>
-      <button data-a="suits">Suits<span class="he">חליפות</span></button>
-      <button data-a="settings">Settings<span class="he">הגדרות</span></button>
+      <button data-a="play" data-i="title.play"></button>
+      <button data-a="missions" data-i="tab.missions"></button>
+      <button data-a="suits" data-i="tab.suits"></button>
+      <button data-a="settings" data-i="tab.settings"></button>
     </nav>
-    <div class="hint">Enter / A to select · ↑ ↓ to move</div>
+    <div class="hint" data-i="title.hint"></div>
+    <div class="lang interactive" role="group" aria-label="Language / שפה"><button data-l="en" lang="en">EN</button><button data-l="he" lang="he">עב</button></div>
     <div class="panel interactive">
-      <h4>Time &amp; weather</h4>
-      <div class="chips tod">${TODS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
-      <h4>Sound</h4>
+      <h4 data-i="title.tod"></h4>
+      <div class="chips tod">${TODS.map(v => `<button data-v="${v}" data-i="title.tod.${v}"></button>`).join('')}</div>
+      <h4 data-i="title.sound"></h4>
       <div class="snd">
-        <span>Master</span><input type="range" min="0" max="1" step="0.05" data-k="masterVolume"><output></output>
-        <span>Music</span><input type="range" min="0" max="1" step="0.05" data-k="musicVolume"><output></output>
-        <span>Effects</span><input type="range" min="0" max="1" step="0.05" data-k="sfxVolume"><output></output>
+        <span data-i="title.master"></span><input type="range" min="0" max="1" step="0.05" data-k="masterVolume"><output dir="ltr"></output>
+        <span data-i="set.music"></span><input type="range" min="0" max="1" step="0.05" data-k="musicVolume"><output dir="ltr"></output>
+        <span data-i="set.sfx"></span><input type="range" min="0" max="1" step="0.05" data-k="sfxVolume"><output dir="ltr"></output>
       </div>
       <button class="mute"></button>
-      <div class="sndnote">Sound starts with your first click or key press. Press N in game to mute.</div>
+      <div class="sndnote" data-i="title.sndnote"></div>
     </div>`;
   document.body.appendChild(el);
+  const langBtns = [...el.querySelectorAll('.lang button')];
+  const labels = () => {
+    el.querySelectorAll('[data-i]').forEach(n => { n.textContent = t(n.dataset.i); });
+    el.querySelector('.by').innerHTML = t('title.by', { name: `<b>${t('title.author')}</b>` });
+    if (document.body.classList.contains('touch-ui')) el.querySelector('.hint').textContent = t('touch.tapSelect');
+    langBtns.forEach(b => b.classList.toggle('on', b.dataset.l === lang()));
+  };
+  labels(); onLangChange(labels);
+  langBtns.forEach(b => {
+    b.addEventListener('click', e => { e.stopPropagation(); if (b.dataset.l !== lang()) { setLang(b.dataset.l); audio?.sfx?.select?.(); } });
+    for (const ev of ['pointerdown', 'mousedown']) b.addEventListener(ev, e => e.stopPropagation());
+  });
   const btns = [...el.querySelectorAll('nav button')];
   setupPanel(sys, el);
   let sel = 0, active = true;

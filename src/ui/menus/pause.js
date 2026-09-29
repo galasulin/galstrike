@@ -8,6 +8,7 @@ import { createCollectiblesPage } from './collectibles.js';
 import { createSettingsPage } from './settings.js';
 import { createMissionsPage } from './missions.js';
 import { createAchievementsPage } from './achievements.js';
+import { t, onLangChange } from '../i18n.js';
 
 export function createPauseMenu(sys) {
   const { ui, audio, flow, prog, save } = sys;
@@ -23,21 +24,27 @@ export function createPauseMenu(sys) {
 
   const pages = [
     createMapPage(sys), createMissionsPage(sys), createAchievementsPage(sys), createSuitsPage(sys), createSkillsPage(sys), createCollectiblesPage(sys),
-    { id: 'photo', title: 'Photo Mode', action: () => { close(true); sys.photo.enter(); sys.photoUI.open(); } },
+    { id: 'photo', get title() { return t('tab.photo'); }, action: () => { close(true); sys.photo.enter(); sys.photoUI.open(); } },
     createSettingsPage(sys),
   ];
   for (const p of pages) if (p.el) { p.el.classList.add('page'); body.appendChild(p.el); }
   tabsEl.innerHTML = pages.map((p, i) => `<span class="tab" data-i="${i}">${p.title}</span>`).join('');
   const tabEls = [...tabsEl.querySelectorAll('.tab')];
-  tabEls.forEach((t, i) => { t.addEventListener('click', () => select(i)); t.addEventListener('mouseenter', () => audio.sfx.hover()); });
+  tabEls.forEach((te, i) => { te.addEventListener('click', () => select(i)); te.addEventListener('mouseenter', () => audio.sfx.hover()); });
+  const footHints = p => (p.hints || []).map(([k, l]) => `<span><span class="sys-key">${k}</span>${l}</span>`).join('') + `<span><span class="sys-key">Esc</span>${t('key.resume')}</span>`;
 
   let open = false, cur = -1, last = 0;
   function refreshStats() {
-    el.querySelector('.lv').textContent = `LEVEL ${prog.level}`;
+    el.querySelector('.lv').textContent = t('pause.level', { n: prog.level });
     el.querySelector('.xn').textContent = `${prog.xp} / ${prog.need} XP`;
     el.querySelector('.xpcol .b i').style.width = Math.min(100, prog.xp / prog.need * 100) + '%';
-    const sp = prog.skillPoints; const spEl = el.querySelector('.sp'); spEl.textContent = `${sp} SKILL POINT${sp === 1 ? '' : 'S'}`; spEl.style.visibility = sp ? '' : 'hidden';
-    tabEls[pages.findIndex(p => p.id === 'skills')].innerHTML = 'Skills' + (sp ? '<span class="dot"></span>' : '');
+    const sp = prog.skillPoints; const spEl = el.querySelector('.sp'); spEl.textContent = t('pause.sp', { n: sp }); spEl.style.visibility = sp ? '' : 'hidden';
+    tabEls.forEach((te, i) => { te.textContent = pages[i].title; });
+    tabEls[pages.findIndex(p => p.id === 'skills')].innerHTML = pages.find(p => p.id === 'skills').title + (sp ? '<span class="dot"></span>' : '');
+  }
+  function centerTab(i) {
+    const box = tabsEl.closest('.tabs'); if (!tabEls[i]) return;
+    if (box.scrollWidth > box.clientWidth) { const b = box.getBoundingClientRect(), r = tabEls[i].getBoundingClientRect(); box.scrollLeft += (r.left + r.width / 2) - (b.left + b.width / 2); } else box.scrollLeft = 0;
   }
   function select(i, silent = false) {
     const p = pages[i]; if (!p) return;
@@ -48,9 +55,9 @@ export function createPauseMenu(sys) {
     p.el.classList.toggle('from-left', i < cur); void p.el.offsetWidth;
     cur = i; last = i; p.el.classList.add('on'); p.el.classList.remove('from-left');
     tabEls.forEach((t, k) => t.classList.toggle('on', k === i));
-    { const box = tabsEl.closest('.tabs'); if (box.scrollWidth > box.clientWidth) { const b = box.getBoundingClientRect(), r = tabEls[i].getBoundingClientRect(); box.scrollLeft += (r.left + r.width / 2) - (b.left + b.width / 2); } } // narrow screens: keep the current tab in view
+    centerTab(i); // narrow screens: keep the current tab in view
     el.classList.toggle('see-through', !!p.seeThrough);
-    hintsEl.innerHTML = (p.hints || []).map(([k, t]) => `<span><span class="sys-key">${k}</span>${t}</span>`).join('') + '<span><span class="sys-key">Esc</span>Resume</span>';
+    hintsEl.innerHTML = footHints(p);
     leftEl.textContent = p.footer?.() || '';
     p.show?.();
     if (!silent) audio.sfx.move();
@@ -89,6 +96,8 @@ export function createPauseMenu(sys) {
   });
   sys.events.on('flow:lockLost', () => { if (!sys.photo.active) show(); });
   const refreshFoot = () => { if (open) { refreshStats(); leftEl.textContent = pages[cur]?.footer?.() || ''; } };
+  // (i18n) language switch while the menu is open: tab names, stats, footer, key hints and the current page
+  onLangChange(() => { refreshStats(); if (open && pages[cur]) { requestAnimationFrame(() => centerTab(cur)); hintsEl.innerHTML = footHints(pages[cur]); leftEl.textContent = pages[cur].footer?.() || ''; (pages[cur].relang || pages[cur].show)?.call(pages[cur]); } });
   for (const ev of ['xp:gain', 'skill:unlocked', 'suit:changed', 'waypoint:set', 'collectible:pickup', 'tower:activated', 'settings:changed', 'mission:complete', 'achievement:unlocked']) sys.events.on(ev, refreshFoot);
 
   // gamepad: Start = pause toggle, Select/View = map, LB/RB tabs, B back
