@@ -13,6 +13,8 @@
 //   suit:changed {id}   skill:unlocked {id}   params:changed params   settings:changed settings
 //   pause {tab}   resume   photomode:enter   photomode:exit   photo:captured {landmarks:[ids], url}
 //   player:thwip {hand}   player:land {severity}   (derived from traversal state; used by audio/NPC reactions)
+//   combat:enemyDown {type, how, crime, combo}   player:hurt {dmg, heavy, by}   player:defeated {crime}   <- emitted BY combat
+//   mission:start {id}   mission:objective {id, index, type}   mission:complete {id, score, rank}   mission:failed {id, reason}   mission:abandon {id}
 const handlers = new Map();
 
 export function on(type, fn) {

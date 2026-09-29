@@ -1,11 +1,12 @@
 // OWNER: systems engineer. Pause menu shell (Esc / P / Start): top tab bar (Q/E or LB/RB to switch), level/XP/SP
-// readout, animated page transitions, footer key hints. Pages: Map, Suits, Skills, Collectibles, Photo Mode, Settings.
+// readout, animated page transitions, footer key hints. Pages: Map, Missions, Suits, Skills, Collectibles, Photo Mode, Settings.
 import { icon } from './icons.js';
 import { createMapPage } from './map.js';
 import { createSuitsPage } from './suits.js';
 import { createSkillsPage } from './skills.js';
 import { createCollectiblesPage } from './collectibles.js';
 import { createSettingsPage } from './settings.js';
+import { createMissionsPage } from './missions.js';
 
 export function createPauseMenu(sys) {
   const { ui, audio, flow, prog, save } = sys;
@@ -20,7 +21,7 @@ export function createPauseMenu(sys) {
   const body = el.querySelector('.body'), tabsEl = el.querySelector('.tl'), hintsEl = el.querySelector('.hints'), leftEl = el.querySelector('.foot .left');
 
   const pages = [
-    createMapPage(sys), createSuitsPage(sys), createSkillsPage(sys), createCollectiblesPage(sys),
+    createMapPage(sys), createMissionsPage(sys), createSuitsPage(sys), createSkillsPage(sys), createCollectiblesPage(sys),
     { id: 'photo', title: 'Photo Mode', action: () => { close(true); sys.photo.enter(); sys.photoUI.open(); } },
     createSettingsPage(sys),
   ];
@@ -35,7 +36,7 @@ export function createPauseMenu(sys) {
     el.querySelector('.xn').textContent = `${prog.xp} / ${prog.need} XP`;
     el.querySelector('.xpcol .b i').style.width = Math.min(100, prog.xp / prog.need * 100) + '%';
     const sp = prog.skillPoints; const spEl = el.querySelector('.sp'); spEl.textContent = `${sp} SKILL POINT${sp === 1 ? '' : 'S'}`; spEl.style.visibility = sp ? '' : 'hidden';
-    tabEls[2].innerHTML = 'Skills' + (sp ? '<span class="dot"></span>' : '');
+    tabEls[pages.findIndex(p => p.id === 'skills')].innerHTML = 'Skills' + (sp ? '<span class="dot"></span>' : '');
   }
   function select(i, silent = false) {
     const p = pages[i]; if (!p) return;
@@ -86,7 +87,7 @@ export function createPauseMenu(sys) {
   });
   sys.events.on('flow:lockLost', () => { if (!sys.photo.active) show(); });
   const refreshFoot = () => { if (open) { refreshStats(); leftEl.textContent = pages[cur]?.footer?.() || ''; } };
-  for (const ev of ['xp:gain', 'skill:unlocked', 'suit:changed', 'waypoint:set', 'collectible:pickup', 'tower:activated', 'settings:changed']) sys.events.on(ev, refreshFoot);
+  for (const ev of ['xp:gain', 'skill:unlocked', 'suit:changed', 'waypoint:set', 'collectible:pickup', 'tower:activated', 'settings:changed', 'mission:complete']) sys.events.on(ev, refreshFoot);
 
   // gamepad: Start = pause toggle, Select/View = map, LB/RB tabs, B back
   const padPrev = {};

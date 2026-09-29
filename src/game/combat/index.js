@@ -4,6 +4,7 @@
 //   crime:engage (systems/crimes.js) -> crime.claim(); the crime's thugs become combat enemies (actor.external = true),
 //     reinforcements run in (gunmen, a brute at bank robberies), throwable props appear around the scene
 //   all enemies down / webbed -> emit('crime:cleared', {id})
+//   emits for missions / scoring: combat:enemyDown {type, how, crime, combo}   player:hurt {dmg, heavy, by}   player:defeated {crime}
 //   player.setControlOverride(fn) (C5) takes over Spider-Man's input + motion while a fight is on; combat animation is a
 //     pose layer on top of the animation layer's output (poselayer.js)
 //   ctx.timeScale (main.js) = hit-stop / slow-mo; world.alarm(pos, r) makes civilians flee; emits 'crime:zone' {pos, radius}
@@ -164,6 +165,7 @@ export function initCombat(ctx) {
   // loss condition: Spider-Man knocked out -> the crime fails, the thugs scatter, he gets back up at full health
   c.onPlayerDefeated = () => {
     const f = c.fight; c.hud.banner('DEFEATED');
+    emit('player:defeated', { crime: f?.crime?.id || null });
     if (!f) return;
     if (f.crime) { const cr = f.crime; releaseFight(true); emit('crime:resolve', { id: cr.id, success: false }); }
     else { endFight(false); }
@@ -172,6 +174,7 @@ export function initCombat(ctx) {
   c.onEnemyOut = (e, how) => {
     c.releaseToken(e); c.clearThreats(e);
     e.actor.hp = 0; e.actor.down = true; e.actor.alive = false; // crime records (crimes.active.thugs[])
+    if (!e.outEmitted) { e.outEmitted = true; emit('combat:enemyDown', { type: e.type, how, crime: c.fight?.crime?.id || null, combo: c.combo.n }); } // missions / scoring
     if (how === 'wall') c.cine(e, 1.0, 'pin');
     if (how === 'wall' || how === 'ground') { c.shake(0.12); c.fx.webHit(e.chest(_v), _v2.set(0, -1, 0)); c.sfx('thwip', 1.3); }
     if (how === 'wall' && e.state === 'stuck') me.focus = Math.min(3, me.focus + 0.2);
@@ -186,7 +189,7 @@ export function initCombat(ctx) {
     if (!inReach || me.invuln()) { c.sfx('whoosh', 10); return; }
     const heavy = e.type === 'brute' || e.atk === 'kick' && Math.random() < 0.3;
     const dmg = e.T.dmg * (heavy && e.type !== 'brute' ? 1.3 : 1);
-    me.takeHit(e, dmg, heavy);
+    me.takeHit(e, dmg, heavy); emit('player:hurt', { dmg, heavy, by: e.type });
     c.fx.hit(_v.copy(P.position).setY(P.position.y + 0.5), _v2.set(pf.x - e.pos.x, 0, pf.z - e.pos.z).normalize(), { heavy: heavy ? 0.6 : 0.2, color: [5, 2, 1.5] });
     c.hitStop(heavy ? 0.08 : 0.045, heavy ? 0.06 : 0.12); c.shake(heavy ? 0.4 : 0.22); if (heavy) P.cam?.impact?.(0.3);
     c.hud.hurt(heavy ? 0.4 : 0.1); c.combo.n = 0; c.sfx('hurt', heavy);
@@ -203,7 +206,7 @@ export function initCombat(ctx) {
     c.sfx('shot');
     if (e.shots >= 3) c.clearThreats(e);
     if (miss) return;
-    me.hp = Math.max(0, me.hp - e.T.dmg);
+    me.hp = Math.max(0, me.hp - e.T.dmg); emit('player:hurt', { dmg: e.T.dmg, heavy: false, by: e.type });
     c.fx.hit(chest, dir.clone().negate(), { heavy: 0.05, color: [5, 2, 1.2] });
     c.hud.hurt(0.08); c.shake(0.1); c.combo.n = 0;
     if (me.isFree() && !me.airborne || me.hp <= 0) me.takeHit(e, 0, me.hp <= 0);

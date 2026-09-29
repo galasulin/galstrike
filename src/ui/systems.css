@@ -457,6 +457,56 @@ input[type=range].sys-range::-moz-range-thumb { width: 12px; height: 18px; backg
   .sys-map .zoomhint { top: 10px; font-size: 11px; line-height: 1.6; }
 }
 
+/* ------------------------------------------------------------------ MISSIONS: live HUD (top centre), results card, pause page */
+.sys-mis { position: absolute; left: 50%; top: 2.6vh; transform: translate(-50%, -10px); min-width: 300px; max-width: 460px; padding: 8px 22px 10px; text-align: center; opacity: 0;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, rgba(8,15,38,.82), rgba(8,15,38,.35) 70%, rgba(8,15,38,0)); transition: opacity .35s, transform .35s; }
+.sys-mis.on { opacity: 1; transform: translate(-50%, 0); }
+.sys-mis.hid, .sys-mres.hid { visibility: hidden; }
+.sys-mis .hd small { font: 800 11px var(--sys-head); letter-spacing: .34em; color: var(--sys-gold); }
+.sys-mis .hd b { display: block; font: 800 20px/1.1 var(--sys-head); letter-spacing: .12em; text-transform: uppercase; }
+.sys-mis .row { display: flex; justify-content: center; gap: 22px; margin-top: 4px; font: 800 18px var(--sys-head); letter-spacing: .1em; }
+.sys-mis .row .tm { color: #fff; } .sys-mis .row .sc { color: var(--sys-gold); }
+.sys-mis .ob { margin-top: 3px; font: 600 14px var(--sys-head); letter-spacing: .14em; text-transform: uppercase; color: var(--sys-soft); }
+.sys-mres { position: absolute; left: 50%; top: 18vh; transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.sys-mres.on { opacity: 1; animation: sysMres .5s cubic-bezier(.2,.9,.2,1); }
+@keyframes sysMres { from { transform: translateX(-50%) scale(1.08); filter: blur(4px); } to { transform: translateX(-50%); filter: none; } }
+.sys-mres .box { position: relative; width: 400px; padding: 18px 26px 16px; background: var(--sys-navy); border: 1px solid var(--sys-line); border-top: 3px solid var(--sys-gold);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); }
+.sys-mres .box.fail { border-top-color: var(--sys-red); }
+.sys-mres small { font: 800 13px var(--sys-head); letter-spacing: .38em; color: var(--sys-gold); }
+.sys-mres .fail small { color: var(--sys-red); }
+.sys-mres h3 { margin: 4px 0 10px; font: 800 32px/1 var(--sys-head); letter-spacing: .1em; text-transform: uppercase; }
+.sys-mres .why { margin: 0 0 12px; font: 500 15px var(--sys-body); color: var(--sys-soft); }
+.sys-mres .rk { position: absolute; right: 24px; top: 14px; font: 800 64px/1 var(--sys-head); }
+.sys-mres .ln { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid rgba(160,188,255,.12); font: 600 15px var(--sys-head); letter-spacing: .12em; text-transform: uppercase; }
+.sys-mres .ln i { font: 500 12px var(--sys-body); font-style: normal; letter-spacing: .04em; color: var(--sys-dim); text-transform: none; margin-left: 10px; }
+.sys-mres .ln b { font: 800 18px var(--sys-head); }
+.sys-mres .ln.tot { border: 0; padding-top: 10px; font-size: 18px; } .sys-mres .ln.tot b { font-size: 30px; color: var(--sys-gold); }
+.sys-mres .ln em { font: 800 11px var(--sys-head); font-style: normal; letter-spacing: .2em; margin-left: 10px; padding: 2px 6px; background: var(--sys-gold); color: var(--sys-ink); }
+.sys-mres .xp { text-align: right; font: 700 14px var(--sys-head); letter-spacing: .16em; color: var(--sys-soft); }
+.sys-mres .keys { display: flex; justify-content: flex-end; gap: 18px; margin-top: 12px; font: 600 13px var(--sys-head); letter-spacing: .14em; text-transform: uppercase; color: var(--sys-soft); }
+.rk-S { color: var(--sys-gold); text-shadow: 0 0 18px rgba(245,184,46,.55); } .rk-A { color: var(--sys-cyan); } .rk-B { color: var(--sys-green); } .rk-C { color: var(--sys-soft); }
+.sys-mpage .cats { width: 320px; }
+.sys-mpage .cats .sys-list-item .n { font: 800 14px var(--sys-head); color: var(--sys-dim); letter-spacing: .1em; }
+.sys-mpage .cats .sys-list-item b { flex: 1; text-align: left; font: 700 16px var(--sys-head); letter-spacing: .12em; text-transform: uppercase; }
+.sys-mpage .cats .sys-list-item.locked b { color: var(--sys-dim); }
+.sys-mpage .cats .sys-list-item em { margin-left: auto; font: 800 16px var(--sys-head); font-style: normal; letter-spacing: .12em; }
+.sys-mpage .cats em.new { font-size: 11px; letter-spacing: .24em; color: var(--sys-gold); }
+.sys-mpage .cats em.live { font-size: 11px; letter-spacing: .24em; color: var(--sys-red); }
+.sys-mpage .cats em.lk svg { width: 18px; height: 18px; color: var(--sys-dim); }
+.sys-mpage .main .hd .pc .rk { font-size: 56px; line-height: 1; }
+.sys-mpage .det { flex: 1; min-height: 0; padding-right: 6px; }
+.sys-mpage .story { font-size: 16px; max-width: 640px; }
+.sys-mpage .objs { margin: 0; padding-left: 22px; font: 700 16px/1.9 var(--sys-head); letter-spacing: .1em; text-transform: uppercase; }
+.sys-mpage .objs li.done { color: var(--sys-dim); text-decoration: line-through; } .sys-mpage .objs li.cur { color: var(--sys-gold); }
+.sys-mpage .stats { display: flex; gap: 34px; }
+.sys-mpage .stats small { display: block; font: 700 11px var(--sys-head); letter-spacing: .24em; color: var(--sys-dim); text-transform: uppercase; }
+.sys-mpage .stats b { font: 800 26px var(--sys-head); letter-spacing: .06em; }
+.sys-mpage .acts { display: flex; align-items: center; gap: 16px; margin: 22px 0 14px; }
+.sys-mpage .acts .warn { font: 600 13px var(--sys-head); letter-spacing: .12em; color: var(--sys-gold); text-transform: uppercase; }
+.sys-mpage .hint { font-size: 13px; color: var(--sys-dim); }
+body.ui-minimal #sys-root > .sys-mis { display: none !important; }
+
 /* Minimal HUD setting (Interface > Minimal HUD): hide every gameplay HUD element except the minimap.
    Menus, fades and the photo-mode flash are untouched. */
 body.ui-minimal #hud > :not(.mm-wrap),
