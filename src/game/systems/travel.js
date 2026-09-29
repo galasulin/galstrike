@@ -27,8 +27,9 @@ export function createTravel(sys) {
     const o = waypoint || objectiveFallback();
     if (o) hud?.setObjective?.(o);
   }
-  function setWaypoint(pos, { silent = false } = {}) {
-    waypoint = pos ? pos.clone() : null;
+  let wpTag = null; // 'mission': placed by missions.js (cleared quietly on arrival, no toast)
+  function setWaypoint(pos, { silent = false, tag = null } = {}) {
+    waypoint = pos ? pos.clone() : null; wpTag = waypoint ? tag : null;
     if (waypoint) waypoint.y = ctx.world.groundHeight(waypoint.x, waypoint.z) + 1.5;
     save.state.waypoint = waypoint ? waypoint.toArray().map(v => +v.toFixed(1)) : null; save.markDirty();
     markers.setWaypoint(waypoint);
@@ -132,7 +133,7 @@ export function createTravel(sys) {
   }
 
   return {
-    get waypoint() { return waypoint; }, get route() { return route; }, get routeLength() { return route && route.length > 1 ? routeLength(route) : null; }, get traveling() { return traveling; },
+    get waypoint() { return waypoint; }, get waypointTag() { return wpTag; }, get route() { return route; }, get routeLength() { return route && route.length > 1 ? routeLength(route) : null; }, get traveling() { return traveling; },
     setWaypoint, fastTravel, teleportTo, refreshObjective, minimap,
     init() { markers.setWaypoint(waypoint); refreshObjective(); },
     update(dt) {
@@ -140,7 +141,7 @@ export function createTravel(sys) {
       routeT -= dt;
       if (waypoint) {
         if (Math.hypot(waypoint.x - p.x, waypoint.z - p.z) < 22 && Math.abs(waypoint.y - p.y) < 40) {
-          ui.toast({ title: 'Destination Reached', text: '', icon: 'waypoint', sound: 'toast' }); setWaypoint(null, { silent: true }); return;
+          if (wpTag !== 'mission') ui.toast({ title: 'Destination Reached', text: '', icon: 'waypoint', sound: 'toast' }); setWaypoint(null, { silent: true }); return;
         }
         if (routeT <= 0 && (routeFrom.distanceTo(p) > 25 || !route)) { route = findRoute(p.x, p.z, waypoint.x, waypoint.z); routeFrom.copy(p); routeT = 0.5; }
         else if (route) route[0] = [p.x, p.z];

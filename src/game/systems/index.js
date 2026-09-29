@@ -4,7 +4,7 @@
 //   ctx.events  (bus: on/emit, see events.js)     ctx.params (traversal tuning from skills, see progression.js)
 //   ctx.flow    (pause/photo/travel modes)         window.__sys (everything, for debugging / playtests)
 // Debug hooks (console / playtest "eval"): __sys.debug.{xp(n), unlockAll(), activateTower(id|'all'), crime(type), tp(x,z,y),
-//   waypoint(x,z), grabNearestBackpack(), openMenu(tab), photo(), state()}.  window.__ptState is extended with systems state.
+//   waypoint(x,z), grabNearestBackpack(), openMenu(tab), photo(), state(), mission.{start(id), skip(), fail(), abandon(), state()}}.  window.__ptState is extended with systems state.
 import * as THREE from 'three';
 import events, { on, emit } from './events.js';
 import { createSave } from './save.js';
@@ -19,6 +19,7 @@ import { createDevMenu } from '../../ui/menus/dev.js';
 import { createCrimes } from './crimes.js';
 import { createTravel } from './travel.js';
 import { createPhoto } from './photo.js';
+import { createMissions } from './missions.js';
 import { createSuits, SUITS } from './suits.js';
 import { createSkillFx } from './skillfx.js';
 import { createUI } from '../../ui/menus/ui.js';
@@ -84,6 +85,7 @@ export function initSystems(ctx) {
   sys.photo = createPhoto(sys);
   sys.pause = createPauseMenu(sys);
   sys.photoUI = createPhotoUI(sys);
+  sys.missions = createMissions(sys); // story missions + scoring (after the pause menu: its result-panel keys win)
   // developer menu (~): dev server, or ?dev on a build (registered after the pause menu: its keys win)
   if (import.meta.env?.DEV || new URLSearchParams(location.search).has('dev')) sys.dev = createDevMenu(sys);
   // user r-symbiote: Classic / Stealth / Negative / Noir were removed; old saves wearing one fall back to Advanced
@@ -154,7 +156,7 @@ export function initSystems(ctx) {
   function interact(dt) {
     pollPadInteract();
     const p = ctx.player.position;
-    const cands = [sys.towers.interact(p), sys.collect.interact(p, ctx.camera), sys.crimes.interact(p)].filter(Boolean);
+    const cands = [sys.towers.interact(p), sys.collect.interact(p, ctx.camera), sys.crimes.interact(p), sys.missions.interact(p)].filter(Boolean);
     cands.sort((a, b) => b.priority - a.priority);
     const c = cands[0];
     if (!c) { ui.prompt(null); holdT = 0; holdId = null; fPressed = false; return; }
@@ -318,16 +320,18 @@ export function initSystems(ctx) {
       sys.crimes.update(dt, p);
       sys.collect.update(dt, p);
       sys.travel.update(dt);
+      sys.missions.update(dt, p);
       interact(dt);
       districtTitle(dt);
       // world pins + minimap icons
       pinList.length = 0;
-      sys.towers.pins(p, pinList); sys.collect.pins(p, pinList); sys.crimes.pins(p, pinList);
+      sys.towers.pins(p, pinList); sys.collect.pins(p, pinList); sys.crimes.pins(p, pinList); sys.missions.pins(p, pinList);
       for (const s of data.stations) if (save.state.stations.includes(s.id)) { const d = Math.hypot(s.pos.x - p.x, s.pos.z - p.z); if (d < 140 && d > 6) pinList.push({ kind: 'station', pos: s.pinPos || (s.pinPos = s.pos.clone().setY(s.pos.y + 3.2)), dist: d, scale: 0.8 }); }
       // waypoint: distance under the HUD's world diamond + objective panel (waypoint > nearest research tower)
       setCombat(!!(ctx.combat?.engaged ?? window.__cmb?.state?.engaged ?? inCombat));
       const wp = sys.travel.waypoint;
       if (inCombat) ui.objective(null);
+      else if (sys.missions.active) ui.objective(sys.missions.objective(p)); // a running mission owns the objective panel
       else if (wp) { const d = Math.hypot(wp.x - p.x, wp.z - p.z); pinList.push({ kind: 'label', pos: wp.clone().setY(wp.y - 1.2), label: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m', edge: false }); ui.objective({ cap: 'Waypoint', text: 'Travel to the marked location', dist: sys.travel.routeLength ?? d }); }
       else if (!sys.crimes.active) { const t = sys.towers.nearestInactive(p); if (t) ui.objective({ cap: 'Objective', text: `Activate the ${data.districts.find(x => x.id === t.district).name} tower`, dist: Math.hypot(t.pos.x - p.x, t.pos.z - p.z) }); else ui.objective(null); }
       else ui.objective(null);
@@ -339,6 +343,7 @@ export function initSystems(ctx) {
       for (const b of data.backpacks) if (!save.state.backpacks.includes(b.id) && (sys.towers.revealed(b.district) || Math.hypot(b.pos.x - p.x, b.pos.z - p.z) < det)) mmList.push({ kind: 'backpack', pos: b.pos, mscale: 0.75 });
       for (const l of data.landmarks) if (!save.state.landmarks.includes(l.id) && sys.towers.revealed(l.district)) mmList.push({ kind: 'landmark', pos: l.target, mscale: 0.8 });
       if (sys.crimes.active) mmList.push({ kind: sys.crimes.active.icon, pos: sys.crimes.active.pos, clamp: true, mscale: 1.1 });
+      sys.missions.minimap(mmList);
       sys.travel.minimap(mmList);
       saveT += dt; if (saveT > 5) { saveT = 0; savePos(); }
     },
@@ -375,7 +380,8 @@ export function initSystems(ctx) {
     photo() { if (sys.pause.open) sys.pause.close(true); sys.photo.enter(); sys.photoUI.open(); },
     suit(id) { save.state.suit = sys.suits.apply(id).id; },
     fastTravel(id) { const s = data.stations.find(s => s.id === id || s.district === id); if (s && !save.state.stations.includes(s.id)) save.state.stations.push(s.id); return sys.travel.fastTravel(s); },
-    state() { const st = save.state; return { mode: flow.mode, level: st.level, xp: st.xp, sp: st.skillPoints, towers: st.towers.length, backpacks: st.backpacks.length, landmarks: st.landmarks.length, photos: st.secretPhotos.length, crime: sys.crimes.active?.type || null, crimeState: sys.crimes.active?.state || null, waypoint: !!sys.travel.waypoint, route: sys.travel.route?.length || 0, suit: st.suit, menu: sys.pause.tab || null }; },
+    mission: sys.missions.debug, // start(id), skip(), fail(), abandon(), unlockAll(), state(), ringPos(i)
+    state() { const st = save.state; return { mission: sys.missions.active?.def.id || null, mode: flow.mode, level: st.level, xp: st.xp, sp: st.skillPoints, towers: st.towers.length, backpacks: st.backpacks.length, landmarks: st.landmarks.length, photos: st.secretPhotos.length, crime: sys.crimes.active?.type || null, crimeState: sys.crimes.active?.state || null, waypoint: !!sys.travel.waypoint, route: sys.travel.route?.length || 0, suit: st.suit, menu: sys.pause.tab || null }; },
   };
   sys.title = createTitle(sys); // (GalStrike) start screen, registered last so its keys win
   window.__sys = sys;
