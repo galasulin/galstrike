@@ -47,6 +47,10 @@ export function createCombatInput(realClock, gameClock) {
     set enabled(v) { enabled = v; if (!v) { pressed.clear(); holdSent = true; } },
     get enabled() { return enabled; },
     poll() { if (enabled) pollPad(); },
+    // on-screen touch buttons (src/ui/touch.js): trigger(action) = a key press; attackDown / attackUp = LMB press / release
+    trigger(k) { if (enabled) press(k); },
+    attackDown() { if (!enabled) return; lmbDown = true; pressT = rnow(); holdSent = false; press('attack'); },
+    attackUp() { lmbDown = false; holdSent = true; },
     // buffered press still fresh (not consumed)
     has(k) { const t = pressed.get(k); if (t == null) return false; if (gnow() - t > BUFFER) { pressed.delete(k); return false; } return true; },
     take(k) { const ok = this.has(k); pressed.delete(k); return ok; },

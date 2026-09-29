@@ -25,11 +25,14 @@ import { createUI } from '../../ui/menus/ui.js';
 import { createPauseMenu } from '../../ui/menus/pause.js';
 import { createTitle } from '../../ui/menus/title.js';
 import { createPhotoUI } from '../../ui/menus/photo.js';
+import { createTouch } from '../../ui/touch.js';
 
 function detectGpuTier(renderer) {
   let name = '';
   try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).toLowerCase(); } catch {}
   if (/nvidia|geforce|quadro|radeon rx|radeon pro|arc\(tm\) a|intel\(r\) arc a/.test(name)) return 'high';
+  // iPad / iPhone: Safari reports a generic "Apple GPU" (so does Safari on a Mac, told apart by having no touch points)
+  if (/ipad|iphone/.test(name) || (/apple gpu/.test(name) && navigator.maxTouchPoints > 1)) return 'low';
   if (/apple m\d|radeon|iris xe|arc\(tm\) graphics/.test(name)) return 'med';
   if (/intel|uhd|hd graphics|iris|mali|adreno|powervr|swiftshader|llvmpipe|basic render/.test(name)) return 'low';
   return 'high';
@@ -292,7 +295,7 @@ export function initSystems(ctx) {
       const fo = save.state.settings.fovOffset || 0;
       if (fo && playing) { ctx.camera.fov += fo; ctx.camera.updateProjectionMatrix(); }
       markers.update(dt, ctx.camera);
-      sys.pause.update(dt); sys.title?.update(dt);
+      sys.pause.update(dt); sys.title?.update(dt); sys.touch?.update(dt);
       sys.photoUI.update(dt);
       ui.update(dt);
       audio.update(dt, { camera: ctx.camera, playerPos: p, speed: playing ? (ctx.player.velocity?.length?.() || 0) : 0, ground: ctx.world.groundHeight(p.x, p.z), swinging: ['swing', 'air'].includes(ctx.player.anim?.mode || ctx.player.mode), mode: ctx.player.anim?.mode || ctx.player.mode || '', inCombat: !!(ctx.combat?.engaged ?? window.__cmb?.state?.engaged) }); // swing + the air between webs (r10j); (audio r1) mode / combat drive the music's swing layers
@@ -362,6 +365,7 @@ export function initSystems(ctx) {
     state() { const st = save.state; return { mode: flow.mode, level: st.level, xp: st.xp, sp: st.skillPoints, towers: st.towers.length, backpacks: st.backpacks.length, landmarks: st.landmarks.length, photos: st.secretPhotos.length, crime: sys.crimes.active?.type || null, crimeState: sys.crimes.active?.state || null, waypoint: !!sys.travel.waypoint, route: sys.travel.route?.length || 0, suit: st.suit, menu: sys.pause.tab || null }; },
   };
   sys.title = createTitle(sys); // (GalStrike) start screen, registered last so its keys win
+  sys.touch = createTouch(sys); // (GalStrike) on-screen touch controls (inert until a finger touches the screen, or ?touch)
   window.__sys = sys;
   const prevPt = window.__ptState;
   window.__ptState = () => ({ ...(prevPt ? prevPt() : {}), sys: sys.debug.state() });
