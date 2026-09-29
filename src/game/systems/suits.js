@@ -38,6 +38,24 @@ export const SUITS = [
     swatch: ['#9e1010', '#e0b040', '#9fe8ff'], strength: 1, emblem: 'ironman', env: 1.3,
     red: L('#8e0c0c'), blue: L('#d9a53a'), white: L('#d9a53a'), black: L('#3a0606'),
     rough: [0.2, 0.22, 0.25, 0.35], metal: [0.9, 1, 1, 0.8], lens: { color: 0xffffff, emissive: 0xd8f4ff, intensity: 1.4 } },
+  // signature suit: black body, neon turquoise web lines that glow (black class -> emissive) and a lightning-bolt emblem
+  { id: 'galstrike', name: 'GalStrike Suit', level: 1, desc: 'The signature suit. Matte black, neon turquoise web lines and a glowing lightning bolt.',
+    swatch: ['#0d0f14', '#1fe0d0', '#1fe0d0'], strength: 1, emblem: 'galstrike',
+    red: L('#15171d'), blue: L('#23262e'), white: L('#1fe0d0'), black: L('#1fe0d0'),
+    rough: [0.5, 0.62, 0.3, 0.3], metal: [0.1, 0.05, 0, 0], emissive: [C(0, 0, 0), C(0, 0, 0), C(0.05, 0.9, 0.8), C(0.03, 0.55, 0.5)],
+    lens: { color: 0xffffff, emissive: 0x5ff5ea, intensity: 1.2 } },
+  { id: 'classic', name: 'Classic Suit', level: 1, desc: 'The timeless look: bright red and royal blue with a bold black web.',
+    swatch: ['#d0141e', '#1d3fa8', '#101010'], strength: 1,
+    red: L('#c8121c'), blue: L('#1c3aa0'), white: L('#f4f4f4'), black: L('#0a0a0a'),
+    rough: [0.6, 0.65, 0.5, 0.6], metal: [0, 0, 0, 0] },
+  { id: 'stealth', name: 'Stealth Suit', level: 1, desc: 'Matte graphite for night work. The lenses glow faint green.',
+    swatch: ['#2a2c30', '#17181b', '#7dff9a'], strength: 1,
+    red: L('#2a2c30'), blue: L('#17181b'), white: L('#55595f'), black: L('#0b0b0c'),
+    rough: [0.85, 0.9, 0.7, 0.8], metal: [0, 0, 0, 0], lens: { color: 0xffffff, emissive: 0x7dff9a, intensity: 0.9 } },
+  { id: 'scarlet', name: 'Scarlet Suit', level: 1, desc: 'Deep scarlet with black panels and a black emblem.',
+    swatch: ['#8e0d16', '#101014', '#101014'], strength: 1, emblem: 'scarlet',
+    red: L('#8e0d16'), blue: L('#131318'), white: L('#131318'), black: L('#2b060a'),
+    rough: [0.55, 0.7, 0.5, 0.6], metal: [0, 0, 0, 0] },
 ];
 
 export function createSuits(ctx) {
@@ -92,7 +110,12 @@ float sysEmblem(vec2 p, vec2 c, float s, float w) {
   vec2 q = p - c;
   if (uEmbShape < 1.5) return sysStar5(q, s * 0.95, 0.42);
   if (uEmbShape < 2.5) return abs(sysHexagram(q, s * 0.48)) - s * 0.07;
-  float r = length(q); return min(r - s * 0.32, abs(r - s * 0.5) - s * 0.06);
+  if (uEmbShape < 3.5) { float r = length(q); return min(r - s * 0.32, abs(r - s * 0.5) - s * 0.06); }
+  vec2 b = q / s; // 4: lightning bolt (three tapered strokes)
+  float d = sysSeg(b, vec2(0.30, 0.95), vec2(-0.18, 0.08)) - 0.13;
+  d = min(d, sysSeg(b, vec2(-0.18, 0.08), vec2(0.20, 0.08)) - 0.11);
+  d = min(d, sysSeg(b, vec2(0.20, 0.08), vec2(-0.28, -0.95)) - 0.08);
+  return d * s;
 }
 // ---- symbiote suit (user r-symbiote)
 uniform float uSym, uSymBump; uniform vec3 uSymW; uniform sampler2D uSymMask;
@@ -266,6 +289,8 @@ if (uSuitOn > 0.5) totalEmissiveRadiance += uSuitER * sysW.x + uSuitEB * sysW.y 
     iron: { mode: 1, front: C(0.95, 0.66, 0.2), back: C(0.95, 0.66, 0.2), backOn: 1, scale: [0.105, 0.16] },
     israel: { mode: 1, shape: 2, front: L('#0038b8'), back: L('#0038b8'), backOn: 1, scale: [0.11, 0.15] },
     captain: { mode: 1, shape: 1, front: L('#f4f4f4'), back: L('#f4f4f4'), backOn: 1, scale: [0.09, 0.13] },
+    galstrike: { mode: 1, shape: 4, front: L('#5ff5ea'), back: L('#5ff5ea'), backOn: 1, scale: [0.1, 0.15], emis: C(0.15, 1.6, 1.45) },
+    scarlet: { mode: 1, front: L('#0c0c10'), back: L('#0c0c10'), backOn: 1, scale: [0.09, 0.15] },
     ironman: { mode: 1, shape: 3, front: L('#e8fbff'), back: L('#d9a53a'), backOn: 0, scale: [0.075, 0.12], emis: C(0.6, 1.6, 2.2) },
   };
   // ---------------------------------------------------------------- symbiote emblem mask (user r10i)

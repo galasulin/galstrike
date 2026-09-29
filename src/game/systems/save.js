@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS = {
 
 export function defaultState() {
   return {
-    v: 1, xp: 0, level: 1, skillPoints: 1, skills: [], suit: 'advanced', suitsUnlocked: ['advanced', 'symbiote', 'israel', 'captain', 'ironman'],
+    v: 1, xp: 0, level: 1, skillPoints: 1, skills: [], suit: 'advanced', suitsUnlocked: ['advanced', 'symbiote', 'israel', 'captain', 'ironman', 'galstrike', 'classic', 'stealth', 'scarlet'],
     towers: [], stations: [], backpacks: [], landmarks: [], secretPhotos: [], photoThumbs: {},
     crimes: { stopped: 0, byType: {}, byDistrict: {} },
     waypoint: null, player: null, playTime: 0,
