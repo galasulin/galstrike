@@ -42,7 +42,7 @@ export function createSettingsPage(sys) {
       ${[['Move', 'W A S D', 'Left Stick'], ['Camera', 'Mouse', 'Right Stick'], ['Web-Swing (hold)', 'Right Mouse', 'R2'], ['Parkour (ground) / Wall-Run (walls)', 'Shift', 'R2'], ['Parkour (ground)', 'Right Mouse', 'R2 (ground)'],
         ['Jump (hold to charge)', 'Space', 'Cross / A'], ['Web-Zip / Point-Launch', 'E / Middle Mouse', 'L2 + R2'], ['Dive / Drop', 'C / Ctrl', 'Circle / B'], ['Quick Web Boost (air)', 'Q', 'L1 / LB'], ['Web Tightrope (perched)', 'T, then W / S', '—'], ['Web Slingshot (ground)', 'Ctrl + Left / Right Mouse', '—'],
         ['Attack / Launcher (combat)', 'Left Mouse (hold)', 'Square / X'], ['Dodge (combat)', 'C / Ctrl · Space jump evades a warning', 'Circle / B'], ['Web Shooter / Web Strike (combat)', 'F / E', 'R1 / Triangle'], ['Throw / Finisher / Heal (combat)', 'R / Q / Z', '—'],
-        ['Interact / Photograph', 'F (hold)', '—'], ['Pause Menu', 'Esc / P', 'Options / Start'], ['Map', 'M', 'Touchpad / View'], ['Photo Mode', 'V (or pause menu)', '—'], ['Controls Help', 'H', '—']]
+        ['Interact / Photograph', 'F (hold)', 'D-pad Up / X / Square (hold)'], ['Pause Menu', 'Esc / P', 'Options / Start'], ['Map', 'M', 'Touchpad / View'], ['Photo Mode', 'V (or pause menu)', '—'], ['Controls Help', 'H', '—']]
         .map(([a, k, p]) => `<div>${a}</div><div class="k"><span class="sys-key">${k}</span></div><div class="k" style="color:var(--sys-soft)">${p}</div>`).join('')}</div>`;
     else if (cat === 'audio') main.innerHTML = `<div class="sys-h3">Audio</div>
       ${range('masterVolume', 0, 1, 0.01, 'Master Volume', 'Everything')}

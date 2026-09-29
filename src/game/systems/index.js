@@ -136,7 +136,23 @@ export function initSystems(ctx) {
   flow.onKey((e, mode) => { if (mode === 'play' && e.code === 'KeyF' && !e.repeat) { fHeld = true; fPressed = true; } return false; });
   addEventListener('keyup', e => { if (e.code === 'KeyF') fHeld = false; });
   addEventListener('blur', () => { fHeld = false; });
+  // (GalStrike) gamepad interact: hold D-pad Up, or Square / X while not fighting (in combat X is the attack button)
+  let padI = false, padLast = false;
+  function pollPadInteract() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let down = false;
+    for (const pad of pads) {
+      if (!pad || pad.mapping !== 'standard') continue;
+      down = !!pad.buttons[12]?.pressed || (!!pad.buttons[2]?.pressed && !inCombat);
+      break;
+    }
+    if (down && !padI) { fHeld = true; fPressed = true; padLast = true; }
+    if (!down && padI) fHeld = false;
+    padI = down;
+  }
+  addEventListener('keydown', e => { if (e.code === 'KeyF') padLast = false; });
   function interact(dt) {
+    pollPadInteract();
     const p = ctx.player.position;
     const cands = [sys.towers.interact(p), sys.collect.interact(p, ctx.camera), sys.crimes.interact(p)].filter(Boolean);
     cands.sort((a, b) => b.priority - a.priority);
@@ -152,7 +168,7 @@ export function initSystems(ctx) {
         if (c.tick && performance.now() - lastTick > 90) { lastTick = performance.now(); c.tick(k); }
         if (k >= 1) { holdT = 0; fHeld = false; c.action(); ui.prompt(null); fPressed = false; return; }
       } else holdT = Math.max(0, holdT - dt * 2);
-      ui.prompt({ label: c.label, sub: c.sub, progress: holdT / c.hold, key: 'F', pos: c.pos });
+      ui.prompt({ label: c.label, sub: c.sub, progress: holdT / c.hold, key: padLast ? '▲ / X' : 'F', pos: c.pos });
     }
     fPressed = false;
   }
