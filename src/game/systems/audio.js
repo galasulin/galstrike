@@ -11,7 +11,7 @@
 import * as THREE from 'three';
 import { nightK } from '../../render/daynight.js';
 
-const BASE = '/assets/audio/';
+const BASE = import.meta.env.BASE_URL + 'assets/audio/';
 const STEMS = ['day', 'night', 'pulseA', 'pulseB'];
 const SPRITE_BUS = { trav: 'sfx', combat: 'sfx', ui: 'ui', world: 'ambience' };
 const clamp = THREE.MathUtils.clamp;

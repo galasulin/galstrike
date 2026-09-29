@@ -1,6 +1,16 @@
 # GalStrike: משחק תלת-ממד של סווינג בעיר, בדפדפן
 
+<p align="center">
+  <a href="https://galasulin.github.io/galstrike/"><img src="https://img.shields.io/badge/▶%20Play%20now-live%20demo-e3262f?style=for-the-badge" alt="Play now"/></a>
+  <img src="https://img.shields.io/badge/Three.js-WebGL2-000000?style=for-the-badge&logo=threedotjs&logoColor=white" alt="Three.js"/>
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Claude%20Code-D97757?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code"/>
+</p>
+
 **GalStrike** הוא משחק עולם פתוח שרץ בדפדפן. מתנדנדים על קורים מעל מנהטן, רצים על קירות ועוצרים פשעים ברחובות.
+
+### ▶ [לשחק עכשיו בדפדפן](https://galasulin.github.io/galstrike/)
+<sub>המשחק כבד מבחינה גרפית ומומלץ כרטיס מסך נפרד. בלפטופ עם שני כרטיסים כדאי להגדיר ל-Chrome להשתמש בכרטיס החזק (NVIDIA Control Panel ואז Manage 3D settings). הטעינה הראשונה לוקחת כדקה.</sub>
 
 פרויקט של **גל אסולין** ([@galasulin](https://github.com/galasulin)). הקוד נכתב באמצעות **Claude** (מודל ה-AI של Anthropic, דרך Claude Code) בהכוונת אדם.
 

@@ -9,7 +9,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 
-const VARIANT_TEX = { b: '/assets/tex/thug_basecolor_b.webp', c: '/assets/tex/thug_basecolor_c.webp' };
+const VARIANT_TEX = { b: import.meta.env.BASE_URL + 'assets/tex/thug_basecolor_b.webp', c: import.meta.env.BASE_URL + 'assets/tex/thug_basecolor_c.webp' };
 const LOOPS = new Set(['idle', 'idleLook', 'walk', 'jog', 'run', 'sprint', 'fightIdle', 'jumpCrouch', 'thugIdle', 'thugWebbedStruggle', 'thugGunAim']);
 // thug.glb's own clips whose hips travel (stumbles, knockdown, get-up): the played copy is IN PLACE (hips X/Z pinned at
 // the standing offset) and the travel is handed to the owner as root motion (a.rootDelta), so the body moves with the
@@ -60,7 +60,7 @@ export function createActors(ctx) {
   function load() {
     if (loading) return loading;
     const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-    loading = loader.loadAsync('/assets/thug.glb').then(g => {
+    loading = loader.loadAsync(import.meta.env.BASE_URL + 'assets/thug.glb').then(g => {
       gltf = g; clipList();
       g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
       return true;
