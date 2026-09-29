@@ -13,7 +13,8 @@
 ![Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-D97757?style=flat-square&logo=anthropic&logoColor=white)
 ![Deploy](https://img.shields.io/github/actions/workflow/status/galasulin/galstrike/pages.yml?style=flat-square&label=GitHub%20Pages)
 
-<img src="public/assets/loading/01.webp" alt="Swinging through Midtown at golden hour" width="100%"/>
+<img src="docs/screenshots/swing.webp" alt="Web-swinging down a Manhattan avenue in the GalStrike suit (real-time capture)" width="100%"/>
+<sub>Real-time gameplay capture · GalStrike suit</sub>
 
 **Swing across a procedural Manhattan, run up skyscrapers, stop street crimes and fight gangs, all in a browser tab.**<br/>
 No install, no plugins: about 51,000 lines of hand-structured JavaScript on top of Three.js.
@@ -99,6 +100,9 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 ---
 
 ## 🖼️ Screenshots
+
+<p align="center"><img src="public/assets/loading/01.webp" alt="Swinging through Midtown at golden hour" width="100%"/></p>
+<p align="center"><sub><b>Midtown · golden hour</b></sub></p>
 
 <p align="center"><img src="docs/screenshots/galstrike-rooftop-night.jpg" alt="The GalStrike suit glowing on a Midtown rooftop at night" width="100%"/></p>
 <p align="center"><sub><b>The GalStrike suit on a Midtown rooftop at night</b> · real in-game capture</sub></p>
