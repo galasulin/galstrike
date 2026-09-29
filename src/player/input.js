@@ -33,7 +33,16 @@ export function createInput(el) {
   });
   addEventListener('keyup', e => keys.delete(e.code));
   addEventListener('blur', () => { keys.clear(); mouse.buttons = 0; });
-  el.addEventListener('click', () => { try { el.requestPointerLock?.(); } catch {} });
+  // (GalStrike) raw, unaccelerated mouse deltas where supported (Chrome/Edge). Without it Windows pointer ballistics +
+  // Chrome's pointer-lock bug produce huge movementX spikes that throw the camera around.
+  const lock = () => {
+    try {
+      const p = el.requestPointerLock?.({ unadjustedMovement: true });
+      if (p?.catch) p.catch(() => { try { el.requestPointerLock?.(); } catch {} });
+    } catch { try { el.requestPointerLock?.(); } catch {} }
+  };
+  el.__lock = lock;
+  el.addEventListener('click', lock);
   addEventListener('mousemove', e => {
     // release-only resync: a mouseup lost outside the window (no pointer lock) must never leave the web stuck on.
     // (DOM MouseEvent.buttons: 1 left, 2 right, 4 middle — our bits are 1 << e.button: 1 left, 2 middle, 4 right)
@@ -43,9 +52,17 @@ export function createInput(el) {
       if ((mouse.buttons & 4) && !(e.buttons & 2)) mouse.buttons &= ~4;
       if ((mouse.buttons & 2) && !(e.buttons & 4)) mouse.buttons &= ~2;
     }
-    if (document.pointerLockElement) { mouse.dx += e.movementX; mouse.dy += e.movementY; }
+    if (document.pointerLockElement) {
+      // (GalStrike) drop bogus spikes: Chrome on Windows occasionally reports a jump of hundreds of px in a single
+      // event (right after locking, or when the hidden cursor hits the screen edge). Real hand motion never does that.
+      const ax = Math.abs(e.movementX), ay = Math.abs(e.movementY);
+      if (performance.now() - lockedAt < 120 || ax > 250 || ay > 250) return;
+      mouse.dx += e.movementX; mouse.dy += e.movementY;
+    }
     else if (mouse.buttons & 1) { mouse.dx += e.movementX; mouse.dy += e.movementY; } // drag-to-orbit without lock
   });
+  let lockedAt = 0;
+  document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement) lockedAt = performance.now(); });
   const tappedBtn = { v: 0 };
   // web slingshot: while Ctrl is held and the gate is open (player on the ground, set by player.js each frame), LMB / RMB
   // clicks are routed to sling.left / sling.right presses and never reach mouse.buttons (no swing, no attack)

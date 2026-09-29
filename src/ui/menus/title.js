@@ -47,7 +47,7 @@ export function createTitle(sys) {
     if (!active) return;
     audio?.sfx?.select?.();
     hide();
-    if (a === 'play') { flow.setMode('play'); try { ctx.renderer.domElement.requestPointerLock?.(); } catch {} }
+    if (a === 'play') { flow.setMode('play'); try { const c = ctx.renderer.domElement; c.__lock ? c.__lock() : c.requestPointerLock?.(); } catch {} }
     else { flow.setMode('play'); sys.pause.show(a); }
   }
   function hide() { active = false; el.classList.remove('on'); setTimeout(() => el.remove(), 650); }
