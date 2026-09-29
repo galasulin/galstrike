@@ -58,6 +58,23 @@ The project is by **Gal Asulin** ([@galasulin](https://github.com/galasulin)). T
 - **Progression:** XP, levels, a skill tree, collectibles (backpacks), landmarks and a **photo mode** with filters and stickers.
 - **Saved progress** in the browser, a full **pause menu** (map, suits, skills, collectibles, settings) and a **developer menu** (`~`).
 
+### 📜 Story missions *(new)*
+- **8 story missions** against the *Static Crew*, a gang jamming the city's research towers, across Midtown, Hell's Kitchen, Chinatown, the Upper East Side, the Financial District and Harlem.
+- **Objective types:** reach a landmark, activate or sync a tower, stop crimes, defeat enemies, recover backpacks, photograph a landmark, and **timed races through glowing rings** above the avenues.
+- **Scoring:** objective points, a time bonus, a no-damage bonus and style points (combo and air time), then an **S / A / B / C rank**. Best score, rank and time are saved per mission, and a live HUD shows the timer, points and current objective.
+
+### 🏆 Achievements and records *(new)*
+- **21 achievements**, two of them hidden, with a gold unlock toast, a sound and an XP reward.
+- **Records:** longest air time, top speed, best combo, best race times, distance swung, crimes stopped, enemies defeated and play time.
+
+### 📱 Touch and tablets *(new)*
+- **On-screen controls** switch on with the first touch: a floating joystick, drag-to-look, Swing, Jump, Zip, Boost, Dive and Parkour buttons, a context **Use** button near towers, and a separate combat button set.
+- Pinch-zoom and scrolling are blocked, safe areas are respected, and phones in portrait get a *rotate your device* hint. Desktop is untouched.
+
+### 🔊 Sound, time and weather *(new)*
+- An original, procedurally made score with day and night layers that react to swinging speed, plus positional sirens and alarms.
+- The **start screen** has a sound panel (master, music and effects sliders, plus mute; <kbd>N</kbd> mutes in game) and a **time and weather picker**: day, morning, sunset, dusk, night or rain.
+
 ### 🎨 Rendering
 - **Three.js WebGL2** with a custom post-processing pipeline: cascaded shadow maps (up to 5 cascades), SSAO, screen-space GI, screen-space reflections, bloom, TAA, depth of field, motion blur and light shafts.
 - **Time-of-day presets** (morning, sunrise, day, sunset, dusk, night and overcast) plus **rain**, with wet streets and puddles.
@@ -140,6 +157,10 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 | **Auto quality** | On load the game reads the GPU name and picks a preset (low for integrated GPUs, medium for mid-range and APUs, high for dedicated GPUs). It re-checks on every load, so when the browser moves to the dedicated GPU the preset follows, until you choose one by hand. |
 | **Dynamic resolution** | If frames stay slow for 2 seconds, internal resolution drops in 10% steps (down to 55%), and climbs back when there is headroom. |
 | **Smooth mouse look** | Raw, unaccelerated mouse input (`unadjustedMovement`), plus a filter for the bogus pointer-lock spikes Chrome sometimes sends on Windows, which used to throw the camera around. |
+| **Story missions** | 8-mission chain with races, scoring, ranks and saved bests, plus a Missions page in the pause menu. |
+| **Achievements** | 21 achievements, a Records panel and gold unlock toasts. |
+| **Touch controls** | Full on-screen controls for tablets and phones. |
+| **Start screen setup** | Time and weather picker, sound sliders and mute. |
 | **Live demo** | Asset URLs are base-path aware, and a GitHub Actions workflow builds and deploys to GitHub Pages on every push. |
 
 ---
@@ -160,6 +181,7 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 <tr><td>Interact (activate tower, hold)</td><td><kbd>F</kbd></td><td>D-pad <kbd>▲</kbd>, or <kbd>X</kbd> / <kbd>▢</kbd> outside combat</td></tr>
 <tr><td>Pause menu / map</td><td><kbd>Esc</kbd> / <kbd>M</kbd></td><td><kbd>Start</kbd> / <kbd>Select</kbd></td></tr>
 <tr><td>Help overlay</td><td><kbd>H</kbd></td><td>—</td></tr>
+<tr><td>Mute / unmute</td><td><kbd>N</kbd></td><td>—</td></tr>
 </table>
 
 > [!NOTE]
@@ -260,9 +282,12 @@ galstrike/
 ## 🛣️ Roadmap
 
 - [x] Gamepad binding for *interact* (tower activation)
-- [ ] Touch controls for phones and tablets
+- [x] Touch controls for phones and tablets
 - [ ] More suits and suit abilities
-- [ ] Story missions with objectives and scoring
+- [x] Story missions with objectives and scoring
+- [x] Achievements and records
+- [ ] Full Hebrew interface (in progress)
+- [ ] Leaderboards
 
 ---
 
@@ -274,6 +299,9 @@ galstrike/
 - 🏙️ **עיר שנבנית מקוד:** אלפי בניינים, גגות, פארקים, טיימס סקוור, גשרים, תנועה והולכי רגל.
 - 🎮 **עולם פתוח:** 9 רובעים עם מגדלים להפעלה, נסיעה מהירה ברכבת, פשעים ברחובות, קרבות, XP, עץ כישורים ומצב צילום.
 - 🦸 **10 חליפות**, ביניהן חליפת החתימה **GalStrike** עם קווי ניאון זוהרים, **חליפת ישראל** עם מגן דוד, **Captain America** ו-**Iron Man** עם כור ארק זוהר.
+- 📜 **8 משימות סיפור** עם מרוצים, ניקוד ודירוג S/A/B/C, ו-**21 הישגים** ושיאים.
+- 📱 **תמיכה במגע ובטאבלטים** עם ג'ויסטיק וכפתורים על המסך.
+- 🔊 **סאונד, שעה ומזג אוויר** מתפריט הפתיחה.
 - ⚡ **ביצועים:** בחירת איכות אוטומטית לפי כרטיס המסך, רזולוציה דינמית, ותנועת מצלמה חלקה (קלט עכבר גולמי).
 
 **▶ [לשחק עכשיו](https://galasulin.github.io/galstrike/)**. מומלץ מחשב עם כרטיס מסך נפרד. הטעינה הראשונה לוקחת כדקה.
