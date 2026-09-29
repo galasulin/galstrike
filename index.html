@@ -7,6 +7,16 @@
 <link rel="icon" href="data:," />
 <link rel="preload" as="image" href="/assets/loading/01.webp" fetchpriority="high" />
 <link rel="stylesheet" id="sys-fonts" href="/assets/ui/fonts/fonts.css" /><!-- the one fonts.css link (src/ui/fonts.js loadFonts() keeps it single) -->
+<script>
+// (i18n) UI language before anything paints: ?lang=he|en, else the saved setting (settings.lang in the save), else the
+// browser language (he* -> Hebrew). Same rule as src/ui/i18n.js, which takes over once the modules load.
+(() => {
+  let l = new URLSearchParams(location.search).get('lang');
+  if (l !== 'he' && l !== 'en') { try { l = JSON.parse(localStorage.getItem('spiderbench.save.v1') || 'null')?.settings?.lang; } catch (e) { l = null; } }
+  if (l !== 'he' && l !== 'en') l = /^(he|iw)\b/i.test(navigator.language || '') ? 'he' : 'en';
+  const h = document.documentElement; h.lang = l; h.dir = l === 'he' ? 'rtl' : 'ltr'; h.classList.toggle('lang-he', l === 'he');
+})();
+</script>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:block}
 /* ---- loading screen (shown before any script runs; driven by window.__boot, see below) ----
@@ -62,6 +72,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:bl
   animation:bootSheen 1.8s ease-in-out infinite;will-change:transform}
 @keyframes bootSheen{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(660%,0,0)}}
 @media (prefers-reduced-motion:reduce){#boot figure img,#boot .grain,#boot .bar b,#boot .row .dots i{animation:none}}
+/* (i18n) Hebrew: Heebo / Secular One (bundled with the game code, registered by src/ui/i18n.js), no wide tracking, mirrored layout */
+html.lang-he #boot{font-family:'Heebo Variable','Spiderbench Sans',system-ui,sans-serif}
+html.lang-he #boot figcaption,html.lang-he #boot .brand span,html.lang-he #boot .row{letter-spacing:0;font-family:'Heebo Variable','Spiderbench Sans',sans-serif}
+html.lang-he #boot figcaption{font-size:15px;font-weight:600}
+html.lang-he #boot .row{font-size:15px;font-weight:600}
+html.lang-he #boot .brand span{font-size:14px;border-left:0;padding-left:0;border-right:1px solid rgba(244,246,251,.3);padding-right:14px}
+html[dir=rtl] #boot figcaption{right:auto;left:clamp(20px,4vw,64px)}
+html[dir=rtl] #boot .brand b{direction:ltr}
+html[dir=rtl] #boot .row .dots i{margin-left:0;margin-right:6px}
+html[dir=rtl] #boot .bar{transform:scaleX(-1)}
 </style>
 </head>
 <body>
@@ -77,7 +97,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:bl
   </div>
   <div class="grain"></div>
   <div class="ui">
-    <div class="brand"><b>SPIDERBENCH<i>.</i></b><span>Manhattan</span></div>
+    <div class="brand"><b>SPIDERBENCH<i>.</i></b><span class="city">Manhattan</span></div>
     <div class="row"><span class="lbl">Starting</span><span class="dots"><i></i><i></i><i></i></span></div>
     <div class="bar"><i></i><b></b></div>
     <div class="msg" role="alert"></div>
@@ -97,6 +117,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:bl
   const LABELS = { boot: 'Starting', tex: 'Loading textures', gen: 'Laying out the streets', build: 'Raising the skyline',
     ground: 'Paving the streets', props: 'Parking the traffic', life: 'Bringing the city to life', coll: 'Mapping every surface',
     player: 'Suiting up', shaders: 'Compiling shaders', frame: 'Swinging in' };
+  // (i18n) Hebrew loading screen (language picked by the <head> script above; keep in step with src/ui/i18n.js)
+  const HE = document.documentElement.lang === 'he';
+  if (HE) {
+    Object.assign(LABELS, { boot: 'מתחילים', tex: 'טוען טקסטורות', gen: 'משרטט את הרחובות', build: 'מקים את קו הרקיע',
+      ground: 'סולל את הרחובות', props: 'מחנה את התנועה', life: 'מפיח חיים בעיר', coll: 'ממפה כל משטח',
+      player: 'לובש את החליפה', shaders: 'מהדר שיידרים', frame: 'יוצא לסווינג' });
+    const CAP = ['מידטאון · שעת זהב', 'טיימס סקוור · לילה', 'גשר ברוקלין · זריחה', 'סנטרל פארק · בוקר', 'מידטאון · צהריים', 'האיסט ריבר · בין ערביים'];
+    el.querySelectorAll('figcaption').forEach((f, i) => { if (CAP[i]) f.textContent = CAP[i]; });
+    el.querySelector('.brand .city').textContent = 'מנהטן'; el.setAttribute('aria-label', 'טוען');
+  }
   const ORDER = Object.keys(LABELS);
   // defaults (ms) measured on the dev machine; replaced by this machine's last load
   const DEF = { boot: 1400, tex: 800, gen: 4600, build: 7200, ground: 2300, props: 1300, life: 1250, coll: 2400, player: 800, shaders: 8200, frame: 3600 };
@@ -143,7 +173,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000}canvas{display:bl
   // certainly fatal (no WebGL, a script that failed to load, anything before the first loading stage), otherwise after
   // 8 s without any progress (a harmless error in an optional module while loading carries on is ignored)
   const msgEl = el.querySelector('.msg');
-  const showErr = m => { if (finished) return; el.classList.add('err'); lbl.textContent = 'Could not start'; msgEl.textContent = (m || 'Unknown error') + ' — details in the browser console'; };
+  const showErr = m => { if (finished) return; el.classList.add('err'); lbl.textContent = HE ? 'לא ניתן להפעיל' : 'Could not start'; msgEl.textContent = (m || (HE ? 'שגיאה לא ידועה' : 'Unknown error')) + (HE ? ' — פרטים בקונסולה של הדפדפן' : ' — details in the browser console'); };
   const fail = (m, fatal) => { if (finished) return; if (fatal || cur === 'boot') { showErr(m); return; } const at = act; setTimeout(() => { if (act === at) showErr(m); }, 8000); };
   const msgOf = e => String(e?.message || e || '').slice(0, 240);
   addEventListener('error', e => {

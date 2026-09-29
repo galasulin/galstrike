@@ -4,28 +4,36 @@
 // waypoint, player), filters, district progress, hover cards, waypoint setting and fast travel.
 import * as THREE from 'three';
 import { badgeImage, badge } from './icons.js';
+import { t, isRtl, onLangChange } from '../i18n.js';
 
 let PXM = 0.6;              // base-map pixels per metre (lowered automatically if the big canvas fails to allocate)
 const K_UP = 0.3, K_E = 0.07; // oblique extrusion: map-metres of north / east roof shift per metre of height
-const FONT = '"Spiderbench Condensed", "Barlow Condensed", "Arial Narrow", sans-serif';
+// (i18n) 'Secular One' only covers Hebrew (unicode-range, src/ui/i18n.js): Latin text keeps Spiderbench Condensed
+const FONT = '"Secular One", "Spiderbench Condensed", "Barlow Condensed", "Arial Narrow", sans-serif';
+const LS = () => (isRtl() ? 0 : 1); // (i18n) no letter-spacing for Hebrew labels
 const MAPC = { water0: '#0b2552', water1: '#0a2048', street: '#07122c', road: '#1a2750', avenue: '#223263', pier: '#1e2a4c', block: '#0e1b40', park: '#123f55', tree0: 'rgba(60,150,160,.42)', tree1: 'rgba(90,180,190,.32)', bg: '#0a2048' };
-const CAT = [
-  ['tower', 'Research Towers'], ['station', 'Fast Travel'], ['backpack', 'Backpacks'], ['landmark', 'Landmarks'], ['photo', 'Secret Photos'], ['crime', 'Crimes'],
-];
+const CAT = ['tower', 'station', 'backpack', 'landmark', 'photo', 'crime'].map(k => [k]); // names: map.cat.<k>
 
 export function createMapPage(sys) {
   const { ctx, data, save, audio, travel } = sys;
   const el = document.createElement('div'); el.className = 'sys-map';
   el.innerHTML = `<canvas></canvas>
-    <div class="legend sys-panel cut interactive"><div class="dist"><small>DISTRICT</small><b></b><div class="dprog"></div><div class="pbar"><i></i></div></div>
+    <div class="legend sys-panel cut interactive"><div class="dist"><small></small><b></b><div class="dprog"></div><div class="pbar"><i></i></div></div>
       <div class="rows"></div></div>
-    <div class="zoomhint">Wheel / + - &nbsp;zoom<br>Drag / WASD &nbsp;pan<br>Click &nbsp;teleport / set waypoint<br>Right-click &nbsp;clear waypoint<br>C &nbsp;center on Spider-Man</div>
+    <div class="zoomhint"></div>
     <div class="card sys-panel cut hide"><small></small><h5></h5><p></p><div class="acts"></div></div>
-    <div class="reveal-hint"><small>DISTRICT UNLOCKED</small><b></b><span><span class="sys-key">Esc</span>Continue</span></div>`;
+    <div class="reveal-hint"><small></small><b></b><span><span class="sys-key">Esc</span><em></em></span></div>`;
   const cv = el.querySelector('canvas'), g = cv.getContext('2d');
   const card = el.querySelector('.card'), rowsEl = el.querySelector('.rows');
   const filters = Object.fromEntries(CAT.map(([k]) => [k, true]));
-  rowsEl.innerHTML = CAT.map(([k, n]) => `<div class="row" data-k="${k}">${badge(k === 'crime' ? 'crime' : k, 24)}<b>${n}</b><span></span></div>`).join('');
+  rowsEl.innerHTML = CAT.map(([k]) => `<div class="row" data-k="${k}">${badge(k === 'crime' ? 'crime' : k, 24)}<b></b><span dir="ltr"></span></div>`).join('');
+  // (i18n) static captions; the base map (river names) is rebuilt on a language switch
+  function labels() {
+    rowsEl.querySelectorAll('.row').forEach(r => { r.querySelector('b').textContent = t('map.cat.' + r.dataset.k); });
+    el.querySelector('.zoomhint').innerHTML = ['map.h.zoom', 'map.h.pan', 'map.h.click', 'map.h.rclick', 'map.h.center'].map(k => t(k)).join('<br>');
+    el.querySelector('.reveal-hint small').textContent = t('tower.unlockedCap'); el.querySelector('.reveal-hint em').textContent = t('key.continue');
+  }
+  labels(); onLangChange(() => { labels(); base = null; baseMips = null; dirty = true; });
   rowsEl.querySelectorAll('.row').forEach(r => r.addEventListener('click', () => { filters[r.dataset.k] = !filters[r.dataset.k]; r.classList.toggle('off', !filters[r.dataset.k]); audio.sfx.move(); dirty = true; }));
 
   // ---------------------------------------------------------------- base map (built lazily once)
@@ -122,8 +130,9 @@ export function createMapPage(sys) {
       c.save(); c.translate(X(a.x), Z(zz)); c.rotate(-Math.PI / 2); c.fillText(a.name, 0, 0); c.restore();
     }
     c.fillStyle = 'rgba(150,200,255,.22)'; c.font = `800 ${Math.round(34 * PXM)}px ${FONT}`;
-    for (const [x, z, t] of [[925, -300, 'E A S T   R I V E R'], [-1150, -300, 'H U D S O N   R I V E R'], [925, 1500, 'E A S T   R I V E R'], [-1150, 1500, 'H U D S O N   R I V E R']]) {
-      c.save(); c.translate(X(x), Z(z)); c.rotate(-Math.PI / 2); c.fillText(t, 0, 0); c.restore();
+    const ER = t('map.eastRiver'), HR = t('map.hudson');
+    for (const [x, z, txt] of [[925, -300, ER], [-1150, -300, HR], [925, 1500, ER], [-1150, 1500, HR]]) {
+      c.save(); c.translate(X(x), Z(z)); c.rotate(-Math.PI / 2); c.fillText(txt, 0, 0); c.restore();
     }
     // a silently failed allocation leaves the canvas transparent: read a few texels back (block centres) and retry
     // smaller if nothing was drawn
@@ -177,12 +186,12 @@ export function createMapPage(sys) {
   const revealed = id => sys.towers.revealed(id);
   function items() {
     const st = save.state, out = [];
-    for (const t of data.towers) out.push({ cat: 'tower', kind: st.towers.includes(t.id) ? 'towerDone' : 'tower', x: t.pos.x, z: t.pos.z, obj: t, title: t.name, cap: st.towers.includes(t.id) ? 'Activated' : 'Research Tower', text: st.towers.includes(t.id) ? 'District scanned. Collectibles revealed.' : 'Reach the rooftop and hold [F] to activate. Reveals this district.' });
-    for (const s of data.stations) { const on = st.stations.includes(s.id); out.push({ cat: 'station', kind: on ? 'station' : 'stationLocked', x: s.pos.x, z: s.pos.z, obj: s, title: s.name, cap: on ? 'Fast Travel' : 'Subway Station — Locked', text: on ? 'Take the subway to travel here instantly.' : 'Activate this district\'s research tower to unlock fast travel.', station: on ? s : null }); }
-    for (const b of data.backpacks) if (revealed(b.district) || st.backpacks.includes(b.id)) { const got = st.backpacks.includes(b.id); out.push({ cat: 'backpack', kind: got ? 'done' : 'backpack', x: b.pos.x, z: b.pos.z, obj: b, title: got ? b.item : 'Backpack', cap: got ? 'Collected' : (b.mount === 'roof' ? 'Rooftop' : b.mount === 'wall' ? 'Webbed to a wall' : 'Ground level'), text: got ? b.desc : 'One of Peter\'s old backpacks, webbed up years ago.', small: got }); }
-    for (const l of data.landmarks) if (revealed(l.district) || st.landmarks.includes(l.id)) { const got = st.landmarks.includes(l.id); out.push({ cat: 'landmark', kind: got ? 'done' : 'landmark', x: l.target.x, z: l.target.z, obj: l, title: l.name, cap: got ? 'Photographed' : 'Landmark', text: got ? l.desc : 'Get it in frame and press [F] (or use Photo Mode).', small: got }); }
-    for (const p of data.secretPhotos) if (revealed(p.district) || st.secretPhotos.includes(p.id)) { const got = st.secretPhotos.includes(p.id); const o = p.area || (p.area = { x: p.pos.x + (Math.sin(p.pos.z) * 45), z: p.pos.z + (Math.cos(p.pos.x) * 45) }); out.push({ cat: 'photo', kind: got ? 'done' : 'photo', x: got ? p.pos.x : o.x, z: got ? p.pos.z : o.z, area: !got, obj: p, title: 'Secret Photo', cap: got ? 'Matched' : 'Somewhere around here', text: p.hint, small: got }); }
-    const c = sys.crimes.active; if (c) out.push({ cat: 'crime', kind: c.icon, x: c.pos.x, z: c.pos.z, obj: c, title: c.title, cap: 'Crime in progress', text: c.text });
+    for (const tw of data.towers) out.push({ cat: 'tower', kind: st.towers.includes(tw.id) ? 'towerDone' : 'tower', x: tw.pos.x, z: tw.pos.z, obj: tw, title: tw.name, cap: t(st.towers.includes(tw.id) ? 'map.tw.done' : 'map.tw.cap'), text: t(st.towers.includes(tw.id) ? 'map.tw.doneText' : 'map.tw.text') });
+    for (const s of data.stations) { const on = st.stations.includes(s.id); out.push({ cat: 'station', kind: on ? 'station' : 'stationLocked', x: s.pos.x, z: s.pos.z, obj: s, title: s.name, cap: t(on ? 'map.st.cap' : 'map.st.locked'), text: t(on ? 'map.st.text' : 'map.st.lockedText'), station: on ? s : null }); }
+    for (const b of data.backpacks) if (revealed(b.district) || st.backpacks.includes(b.id)) { const got = st.backpacks.includes(b.id); out.push({ cat: 'backpack', kind: got ? 'done' : 'backpack', x: b.pos.x, z: b.pos.z, obj: b, title: got ? b.item : t('map.bp.title'), cap: t(got ? 'map.bp.got' : b.mount === 'roof' ? 'map.bp.roof' : b.mount === 'wall' ? 'map.bp.wall' : 'map.bp.ground'), text: got ? b.desc : t('map.bp.text'), small: got }); }
+    for (const l of data.landmarks) if (revealed(l.district) || st.landmarks.includes(l.id)) { const got = st.landmarks.includes(l.id); out.push({ cat: 'landmark', kind: got ? 'done' : 'landmark', x: l.target.x, z: l.target.z, obj: l, title: l.name, cap: t(got ? 'map.lm.got' : 'map.lm.cap'), text: got ? l.desc : t('map.lm.text'), small: got }); }
+    for (const p of data.secretPhotos) if (revealed(p.district) || st.secretPhotos.includes(p.id)) { const got = st.secretPhotos.includes(p.id); const o = p.area || (p.area = { x: p.pos.x + (Math.sin(p.pos.z) * 45), z: p.pos.z + (Math.cos(p.pos.x) * 45) }); out.push({ cat: 'photo', kind: got ? 'done' : 'photo', x: got ? p.pos.x : o.x, z: got ? p.pos.z : o.z, area: !got, obj: p, title: t('map.sp.title'), cap: t(got ? 'cp.matched' : 'map.sp.around'), text: p.hint, small: got }); }
+    const c = sys.crimes.active; if (c) out.push({ cat: 'crime', kind: c.icon, x: c.pos.x, z: c.pos.z, obj: c, title: c.title, cap: t('map.crimeCap'), text: c.text });
     return out.filter(i => filters[i.cat]);
   }
 
@@ -216,12 +225,12 @@ export function createMapPage(sys) {
       const lock = !revealed(d.id);
       const dw = (sx1 - sx0) * 0.86;
       g.save(); g.textAlign = 'center'; g.textBaseline = 'middle';
-      let f2 = fs; g.font = `800 ${f2}px ${FONT}`; g.letterSpacing = `${Math.round(f2 * 0.18)}px`;
-      let tw = g.measureText(d.name.toUpperCase()).width; if (tw > dw) { f2 = Math.max(11 * dpr, Math.floor(f2 * dw / tw)); g.font = `800 ${f2}px ${FONT}`; g.letterSpacing = `${Math.round(f2 * 0.18)}px`; tw = g.measureText(d.name.toUpperCase()).width; }
+      let f2 = fs; g.font = `800 ${f2}px ${FONT}`; g.letterSpacing = `${Math.round(f2 * 0.18 * LS())}px`;
+      let tw = g.measureText(d.name.toUpperCase()).width; if (tw > dw) { f2 = Math.max(11 * dpr, Math.floor(f2 * dw / tw)); g.font = `800 ${f2}px ${FONT}`; g.letterSpacing = `${Math.round(f2 * 0.18 * LS())}px`; tw = g.measureText(d.name.toUpperCase()).width; }
       const sf = Math.max(10 * dpr, Math.round(f2 * 0.42));
       // one uniform style; the status line only for the hovered district (locked ones get a small red marker)
       const hot = hoverD === d;
-      const sub = !hot ? '' : lock ? 'SIGNAL SCRAMBLED · FIND THE RESEARCH TOWER' : `${Math.round(districtPct(d) * 100)}% COMPLETE`;
+      const sub = !hot ? '' : lock ? t('map.scrambled') : t('map.pct', { n: Math.round(districtPct(d) * 100) });
       const bw = tw + f2 + 16 * dpr, bh = f2 * 1.9; // size from the name only so hovering never moves the label
       // visible part of the district (label must stay on screen)
       const vx0 = Math.max(sx0, 0) + bw / 2, vx1 = Math.min(sx1, W) - bw / 2, vy0 = Math.max(sy0, 0) + bh / 2, vy1 = Math.min(sy1, H) - bh / 2;
@@ -239,9 +248,9 @@ export function createMapPage(sys) {
       const Yt = Y - bh * 0.18;
       g.shadowColor = 'rgba(0,6,24,.95)'; g.shadowBlur = 10 * dpr;
       g.fillStyle = 'rgba(255,255,255,.88)'; g.fillText(d.name.toUpperCase(), X, Yt);
-      if (lock) { const lx = X - tw / 2 - f2 * 0.55, ly = Yt, r = f2 * 0.2; g.shadowBlur = 0; g.fillStyle = '#e3262f'; g.beginPath(); g.moveTo(lx, ly - r); g.lineTo(lx + r, ly); g.lineTo(lx, ly + r); g.lineTo(lx - r, ly); g.closePath(); g.fill(); }
+      if (lock) { const lx = X + (isRtl() ? 1 : -1) * (tw / 2 + f2 * 0.55), ly = Yt, r = f2 * 0.2; g.shadowBlur = 0; g.fillStyle = '#e3262f'; g.beginPath(); g.moveTo(lx, ly - r); g.lineTo(lx + r, ly); g.lineTo(lx, ly + r); g.lineTo(lx - r, ly); g.closePath(); g.fill(); }
       if (sub) {
-        g.shadowBlur = 6 * dpr; g.letterSpacing = `${Math.round(sf * 0.2)}px`; g.font = `800 ${sf}px ${FONT}`;
+        g.shadowBlur = 6 * dpr; g.letterSpacing = `${Math.round(sf * 0.2 * LS())}px`; g.font = `800 ${sf}px ${FONT}`;
         const pc = districtPct(d); g.fillStyle = lock ? '#ff5a61' : pc >= 1 ? '#f5c02e' : 'rgba(170,205,255,.95)';
         // keep the (wider) status line fully on screen and clear of the side panels
         const sw = g.measureText(sub).width, lp = panels[0] ? panels[0][2] : 0, rp = panels[1] ? panels[1][0] : W;
@@ -341,7 +350,7 @@ export function createMapPage(sys) {
       if (it.cat === 'crime') { g.beginPath(); g.arc(X, Y, s * (0.7 + (time % 1) * 0.9), 0, 6.3); g.strokeStyle = `rgba(227,38,47,${1 - (time % 1)})`; g.lineWidth = 2 * dpr; g.stroke(); }
       if (im.complete) { g.save(); g.globalAlpha = it.small ? 0.72 : 1; g.shadowColor = 'rgba(0,4,20,.8)'; g.shadowBlur = 6 * dpr; g.shadowOffsetY = 2 * dpr; g.drawImage(im, X - s / 2, Y - s / 2, s, s); g.restore(); }
       drawn.push({ it, X, Y, r: s * 0.55 });
-      if (it.cat === 'landmark' && view.s > 0.42) { g.save(); g.font = `800 ${Math.round(12 * dpr)}px ${FONT}`; g.letterSpacing = `${2 * dpr}px`; g.textAlign = 'left'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,6,24,.95)'; g.shadowBlur = 6 * dpr; g.fillStyle = it.small ? 'rgba(160,220,210,.7)' : '#9ff0e2'; g.fillText((it.obj.name || it.title).toUpperCase(), X + s * 0.62, Y); g.restore(); }
+      if (it.cat === 'landmark' && view.s > 0.42) { g.save(); g.font = `800 ${Math.round(12 * dpr)}px ${FONT}`; g.letterSpacing = `${2 * dpr * LS()}px`; g.textAlign = 'left'; g.textBaseline = 'middle'; g.direction = 'ltr'; g.shadowColor = 'rgba(0,6,24,.95)'; g.shadowBlur = 6 * dpr; g.fillStyle = it.small ? 'rgba(160,220,210,.7)' : '#9ff0e2'; g.fillText((it.obj.name || it.title).toUpperCase(), X + s * 0.62, Y); g.restore(); }
     }
     g.restore();
     // waypoint
@@ -377,7 +386,7 @@ export function createMapPage(sys) {
       const pg = g.createLinearGradient(W - 220 * dpr, 0, W, 0); pg.addColorStop(0, 'rgba(4,9,26,0)'); pg.addColorStop(0.35, 'rgba(4,9,26,.72)'); pg.addColorStop(1, 'rgba(4,9,26,.8)');
       g.fillStyle = pg; g.fillRect(W - 220 * dpr, H - 118 * dpr, 220 * dpr, 118 * dpr);
       g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(bx - L, by, L, 2 * dpr); g.fillRect(bx - L, by - 5 * dpr, 2 * dpr, 7 * dpr); g.fillRect(bx - 2 * dpr, by - 5 * dpr, 2 * dpr, 7 * dpr);
-      g.font = `800 ${13 * dpr}px ${FONT}`; g.letterSpacing = `${2 * dpr}px`; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText(`${m} M`, bx, by - 9 * dpr);
+      g.font = `800 ${13 * dpr}px ${FONT}`; g.letterSpacing = `${2 * dpr}px`; g.textAlign = 'right'; g.textBaseline = 'alphabetic'; g.fillText(t('dist.M', { n: m }), bx, by - 9 * dpr);
       const nx = W - 60 * dpr, ny = H - 90 * dpr; g.save(); g.translate(nx, ny);
       g.beginPath(); g.arc(0, 0, 18 * dpr, 0, 6.3); g.fillStyle = 'rgba(4,9,26,.7)'; g.fill(); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1 * dpr; g.stroke();
       g.beginPath(); g.moveTo(0, -13 * dpr); g.lineTo(6 * dpr, 3 * dpr); g.lineTo(-6 * dpr, 3 * dpr); g.closePath(); g.fillStyle = '#e3262f'; g.fill();
@@ -405,9 +414,9 @@ export function createMapPage(sys) {
     const lm = data.landmarks.find(l => l.district === d.id), sp = data.secretPhotos.find(s => s.district === d.id);
     const pc = districtPct(d);
     el.querySelector('.dist .pbar i').style.width = (pc * 100) + '%';
-    el.querySelector('.dist small').textContent = revealed(d.id) ? `DISTRICT · ${Math.round(pc * 100)}% COMPLETE` : 'DISTRICT · LOCKED';
-    const cell = (k, v) => `<span style="white-space:nowrap;margin-right:14px">${k} <b style="display:inline;font:inherit;color:#fff">${v}</b></span>`;
-    el.querySelector('.dist .dprog').innerHTML = `<div style="font:600 13px var(--sys-head);letter-spacing:.12em;color:var(--sys-soft);margin-top:6px;line-height:1.7">${cell('BACKPACKS', `${got}/${bp.length}`)}${cell('LANDMARK', st.landmarks.includes(lm?.id) ? '✓' : '—')}${cell('PHOTO', st.secretPhotos.includes(sp?.id) ? '✓' : '—')}${cell('CRIMES', st.crimes.byDistrict[d.id] || 0)}</div>`;
+    el.querySelector('.dist small').textContent = revealed(d.id) ? t('map.distPct', { n: Math.round(pc * 100) }) : t('map.distLocked');
+    const cell = (k, v) => `<span style="white-space:nowrap;margin-inline-end:14px">${k} <b style="display:inline;font:inherit;color:#fff"><bdi>${v}</bdi></b></span>`;
+    el.querySelector('.dist .dprog').innerHTML = `<div style="font:600 13px var(--sys-head);letter-spacing:.12em;color:var(--sys-soft);margin-top:6px;line-height:1.7">${cell(t('map.c.backpacks'), `${got}/${bp.length}`)}${cell(t('map.c.landmark'), st.landmarks.includes(lm?.id) ? '✓' : '—')}${cell(t('map.c.photo'), st.secretPhotos.includes(sp?.id) ? '✓' : '—')}${cell(t('map.c.crimes'), st.crimes.byDistrict[d.id] || 0)}</div>`;
   }
 
   function pick(mx, my) {
@@ -419,11 +428,11 @@ export function createMapPage(sys) {
     card.querySelector('small').textContent = it.cap; card.querySelector('h5').textContent = it.title; card.querySelector('p').textContent = it.text || '';
     const acts = card.querySelector('.acts'); acts.innerHTML = '';
     const btn = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'sys-btn ' + cls; b.textContent = label; b.onclick = e => { e.stopPropagation(); fn(); }; acts.appendChild(b); };
-    if (it.station) btn('Fast Travel', 'red', () => { hideCard(); sys.pause.close(true); travel.fastTravel(it.station); });
-    if (it.teleport) btn('Teleport Here', 'red', () => { hideCard(); sys.pause.close(true); travel.teleportTo(it.x, it.z); }); // (user r-mapteleport)
-    btn('Set Waypoint', '', () => { travel.setWaypoint(new THREE.Vector3(it.x, 0, it.z)); hideCard(); dirty = true; });
+    if (it.station) btn(t('map.btn.ft'), 'red', () => { hideCard(); sys.pause.close(true); travel.fastTravel(it.station); });
+    if (it.teleport) btn(t('map.btn.tp'), 'red', () => { hideCard(); sys.pause.close(true); travel.teleportTo(it.x, it.z); }); // (user r-mapteleport)
+    btn(t('map.btn.wp'), '', () => { travel.setWaypoint(new THREE.Vector3(it.x, 0, it.z)); hideCard(); dirty = true; });
     const r = el.getBoundingClientRect();
-    card.style.left = Math.min(r.width - 320, mx + 24) + 'px'; card.style.top = Math.min(r.height - 200, Math.max(10, my - 40)) + 'px';
+    card.style.left = (isRtl() ? Math.max(10, mx - 324) : Math.min(r.width - 320, mx + 24)) + 'px'; // (i18n) RTL: card opens to the left of the cursor card.style.top = Math.min(r.height - 200, Math.max(10, my - 40)) + 'px';
     card.classList.remove('hide'); audio.sfx.select();
   }
   function hideCard() { card.classList.add('hide'); }
@@ -450,7 +459,7 @@ export function createMapPage(sys) {
     if (wp && Math.hypot(sx - mx * dpr, sy - my * dpr) < 22 * dpr) { travel.setWaypoint(null); dirty = true; return; }
     // (user r-mapteleport) empty spot: card with Teleport Here (drop in from the sky) + Set Waypoint
     const x = THREE.MathUtils.clamp(wx, -1490, 640), z = THREE.MathUtils.clamp(wz, -1590, 1590);
-    showCard({ x, z, cap: 'Map Location', title: 'Drop In Here', text: 'Teleport and fall in from the sky above this spot, or mark it with a waypoint.', teleport: true }, mx, my);
+    showCard({ x, z, cap: t('map.loc.cap'), title: t('map.loc.title'), text: t('map.loc.text'), teleport: true }, mx, my);
     dirty = true;
   });
   cv.addEventListener('contextmenu', e => { e.preventDefault(); if (travel.waypoint) { travel.setWaypoint(null); dirty = true; } hideCard(); });
@@ -465,9 +474,9 @@ export function createMapPage(sys) {
   addEventListener('keyup', e => held.delete(e.code));
 
   return {
-    id: 'map', title: 'Map', el, reveal,
-    hints: [['Click', 'Waypoint'], ['R-Click', 'Clear'], ['C', 'Center']],
-    footer: () => `${save.state.towers.length}/${data.towers.length} DISTRICTS UNLOCKED`,
+    id: 'map', get title() { return t('tab.map'); }, el, reveal, relang: () => { dirty = true; updateLegend(); },
+    get hints() { return [[t('key.click'), t('hint.waypoint')], [t('key.rClick'), t('hint.clear')], ['C', t('hint.center')]]; },
+    footer: () => t('map.foot', { a: save.state.towers.length, b: data.towers.length }),
     show() { drawChecked = false; el.querySelector('.zoomhint').classList.remove('fade'); clearTimeout(hintT); hintT = setTimeout(() => el.querySelector('.zoomhint').classList.add('fade'), 5000); center(); hideCard(); dirty = true; updateLegend(); window.__sysMap = { toS: (x, z) => { const [a, b] = toS(x, z); return [a / dpr, b / dpr]; }, view }; },
     hide() { hideCard(); held.clear(); el.querySelector('.reveal-hint').classList.remove('on'); revealAnim = null; },
     back() { if (!card.classList.contains('hide')) { hideCard(); return true; } return false; },

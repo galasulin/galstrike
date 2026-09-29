@@ -10,6 +10,7 @@
 import { on, emit } from './events.js';
 import { MISSIONS } from './missions.js';
 import { icon } from '../../ui/menus/icons.js';
+import { t, localize } from '../../ui/i18n.js';
 
 // stat keys -> see createAchievements().stat
 export const ACHIEVEMENTS = [
@@ -35,6 +36,8 @@ export const ACHIEVEMENTS = [
   { id: 'travel1', title: 'Mind the Gap', desc: 'Fast travel by subway.', icon: 'station', stat: 'fastTravel', goal: 1 },
   { id: 'play30', title: 'Dedicated', desc: 'Play for 30 minutes.', icon: 'gps', stat: 'playTime', goal: 1800, fmt: 'min', hidden: true },
 ];
+
+for (const a of ACHIEVEMENTS) localize(a, 'ach.' + a.id, ['title', 'desc']); // (i18n)
 
 const XP_DEFAULT = 100;
 const defStats = () => ({ enemies: 0, photos: 0, fastTravel: 0, airTime: 0, distance: 0, suitsWorn: [] });
@@ -88,7 +91,7 @@ export function createAchievements(sys) {
     if (A.unlocked[d.id]) return false;
     A.unlocked[d.id] = Date.now(); save.markDirty();
     if (!silent) {
-      ui.toast({ title: 'Achievement Unlocked', text: d.title, icon: achBadge(d.icon, 38), tone: 'gold ach', sound: 'success', ms: 5200, maxAge: 60000 });
+      ui.toast({ title: t('ach.unlocked'), text: d.title, icon: achBadge(d.icon, 38), tone: 'gold ach', sound: 'success', ms: 5200, maxAge: 60000 });
       prog.addXp(d.xp ?? XP_DEFAULT, 'achievement');
     }
     emit('achievement:unlocked', { id: d.id, title: d.title });
@@ -102,7 +105,7 @@ export function createAchievements(sys) {
     try { for (const d of ACHIEVEMENTS) if (!A.unlocked[d.id] && progress(d).k >= 1) { got.push(d); unlock(d, { silent: bulk && got.length > 0 }); } } finally { checking = false; }
     if (bulk && got.length > 1) {
       prog.addXp(got.slice(1).reduce((s, d) => s + (d.xp ?? XP_DEFAULT), 0), 'achievement');
-      ui.toast({ title: 'Achievements Unlocked', text: `${got.length - 1} more — pause menu › Achievements`, icon: achBadge('xp', 38), tone: 'gold ach', sound: null, ms: 5200, maxAge: 60000 });
+      ui.toast({ title: t('ach.unlockedMany'), text: t('ach.more', { n: got.length - 1 }), icon: achBadge('xp', 38), tone: 'gold ach', sound: null, ms: 5200, maxAge: 60000 });
     }
     return got.length;
   }
@@ -166,7 +169,7 @@ export function createAchievements(sys) {
           progress: Object.fromEntries(ACHIEVEMENTS.map(d => { const p = progress(d); return [d.id, `${Math.floor(p.value)}/${p.goal}`]; })),
           stats: { ...A.stats, airTime: +A.stats.airTime.toFixed(1), distance: Math.round(A.stats.distance) }, records: api.records() };
       },
-      unlockAll() { let n = 0; for (const d of ACHIEVEMENTS) if (unlock(d, { silent: true })) n++; if (n) { ui.toast({ title: 'Achievement Unlocked', text: `All achievements (${n} new)`, icon: achBadge('xp', 38), tone: 'gold ach', sound: 'success' }); } save.markDirty(); return n; },
+      unlockAll() { let n = 0; for (const d of ACHIEVEMENTS) if (unlock(d, { silent: true })) n++; if (n) { ui.toast({ title: t('ach.unlocked'), text: t('ach.allNew', { n }), icon: achBadge('xp', 38), tone: 'gold ach', sound: 'success' }); } save.markDirty(); return n; },
       unlock(id) { const d = ACHIEVEMENTS.find(x => x.id === id); return d ? unlock(d) : false; },
       reset() { save.state.achievements = defaultAchievements(); save.state.playTime = 0; A = ensure(); wear(S().suit); save.flush(); return true; },
       check,

@@ -2,6 +2,7 @@
 // orbits the frozen player on the right half; drag to rotate, shallow depth of field), equip applies instantly.
 import * as THREE from 'three';
 import { SUITS } from '../../game/systems/suits.js';
+import { t, isRtl } from '../i18n.js';
 
 function suitArt(s) {
   const [a, b, c] = s.swatch;
@@ -17,25 +18,26 @@ function suitArt(s) {
 export function createSuitsPage(sys) {
   const { ctx, save, audio, prog } = sys;
   const el = document.createElement('div'); el.className = 'sys-suits';
-  el.innerHTML = `<div class="col"><div class="sys-h3">Suit Selection</div><h2 class="sys-h2">Suits</h2><div class="grid interactive"></div>
-    <div class="info sys-panel cut"><div class="sys-h3 st"></div><h2 class="sys-h2 nm"></h2><div class="sw"></div><p class="sys-p ds"></p><div style="margin-top:18px"><button class="sys-btn red eqb">Equip</button></div></div></div>
-    <div class="rot">Drag to rotate</div>`;
+  el.innerHTML = `<div class="col"><div class="sys-h3 cap"></div><h2 class="sys-h2 ttl"></h2><div class="grid interactive"></div>
+    <div class="info sys-panel cut"><div class="sys-h3 st"></div><h2 class="sys-h2 nm"></h2><div class="sw"></div><p class="sys-p ds"></p><div style="margin-top:18px"><button class="sys-btn red eqb"></button></div></div></div>
+    <div class="rot"></div>`;
   const grid = el.querySelector('.grid');
   let sel = save.state.suit;
   const unlocked = s => prog.level >= s.level;
   function render() {
+    el.querySelector('.col > .cap').textContent = t('sp.cap'); el.querySelector('.col > .ttl').textContent = t('tab.suits'); el.querySelector('.rot').textContent = t('sp.rotate');
     grid.innerHTML = SUITS.map(s => `<div class="sys-suit ${s.id === sel ? 'on' : ''} ${unlocked(s) ? '' : 'locked'}" data-id="${s.id}">${suitArt(s)}
-      ${save.state.suit === s.id ? '<span class="eq">EQUIPPED</span>' : ''}${unlocked(s) ? '' : `<span class="lock">LVL ${s.level}</span>`}<div class="nm">${s.name}</div></div>`).join('');
+      ${save.state.suit === s.id ? `<span class="eq">${t('sp.equippedTag')}</span>` : ''}${unlocked(s) ? '' : `<span class="lock">${t('sp.lvl', { n: s.level })}</span>`}<div class="nm">${s.name}</div></div>`).join('');
     grid.querySelectorAll('.sys-suit').forEach(c => {
       c.addEventListener('click', () => { sel = c.dataset.id; audio.sfx.move(); preview(); render(); });
       c.addEventListener('dblclick', () => equip());
       c.addEventListener('mouseenter', () => audio.sfx.hover());
     });
     const s = SUITS.find(x => x.id === sel);
-    el.querySelector('.info .st').textContent = save.state.suit === s.id ? 'Equipped' : unlocked(s) ? 'Available' : `Unlocks at level ${s.level}`;
+    el.querySelector('.info .st').textContent = save.state.suit === s.id ? t('sp.equipped') : unlocked(s) ? t('sp.available') : t('sp.unlocksAt', { n: s.level });
     el.querySelector('.info .nm').textContent = s.name; el.querySelector('.info .ds').textContent = s.desc;
     el.querySelector('.sw').innerHTML = s.swatch.map(c => `<i style="background:${c}"></i>`).join('');
-    const b = el.querySelector('.eqb'); b.disabled = !unlocked(s) || save.state.suit === s.id; b.textContent = save.state.suit === s.id ? 'Equipped' : 'Equip';
+    const b = el.querySelector('.eqb'); b.disabled = !unlocked(s) || save.state.suit === s.id; b.textContent = save.state.suit === s.id ? t('sp.equipped') : t('sp.equip');
   }
   function preview() { sys.suits.apply(sel); } // locked suits can be previewed, not equipped
   function equip() {
@@ -108,7 +110,7 @@ export function createSuitsPage(sys) {
     const dist = camDist;
     cam.position.set(center.x + Math.sin(yaw) * dist, center.y + 0.35, center.z + Math.cos(yaw) * dist);
     _f.copy(center).sub(cam.position).setY(0).normalize(); _r.set(-_f.z, 0, _f.x);
-    _t.copy(center).addScaledVector(_r, -0.95); _t.y -= 0.05;
+    _t.copy(center).addScaledVector(_r, isRtl() ? 0.95 : -0.95); _t.y -= 0.05; // (i18n) RTL: the card column is on the right, Spider-Man stands left
     const gy = ctx.world.groundHeight(cam.position.x, cam.position.z, cam.position.y) + 0.3; if (cam.position.y < gy) cam.position.y = gy;
     cam.up.set(0, 1, 0); cam.lookAt(_t);
     if (cam.fov !== 42) { cam.fov = 42; cam.updateProjectionMatrix(); }
@@ -118,9 +120,9 @@ export function createSuitsPage(sys) {
   let camSave = null;
 
   return {
-    id: 'suits', title: 'Suits', el, seeThrough: true, camera,
-    hints: [['Click', 'Select'], ['Dbl-Click', 'Equip']],
-    footer: () => `${SUITS.filter(unlocked).length}/${SUITS.length} SUITS UNLOCKED`,
+    id: 'suits', get title() { return t('tab.suits'); }, el, seeThrough: true, camera, relang: () => render(),
+    get hints() { return [[t('key.click'), t('hint.select')], [t('key.dblClick'), t('hint.equip')]]; },
+    footer: () => t('sp.foot', { a: SUITS.filter(unlocked).length, b: SUITS.length }),
     show() {
       sel = save.state.suit; render();
       // start in FRONT of Spider-Man (opposite the chase camera), on the first yaw with a clear line of sight
@@ -145,8 +147,9 @@ export function createSuitsPage(sys) {
     },
     key(e) {
       const i = SUITS.findIndex(s => s.id === sel);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') { sel = SUITS[(i + 1) % SUITS.length].id; preview(); render(); audio.sfx.move(); return true; }
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') { sel = SUITS[(i - 1 + SUITS.length) % SUITS.length].id; preview(); render(); audio.sfx.move(); return true; }
+      const fwd = isRtl() ? ['ArrowLeft', 'KeyA'] : ['ArrowRight', 'KeyD'], back = isRtl() ? ['ArrowRight', 'KeyD'] : ['ArrowLeft', 'KeyA']; // (i18n) RTL grid runs right to left
+      if (fwd.includes(e.code)) { sel = SUITS[(i + 1) % SUITS.length].id; preview(); render(); audio.sfx.move(); return true; }
+      if (back.includes(e.code)) { sel = SUITS[(i - 1 + SUITS.length) % SUITS.length].id; preview(); render(); audio.sfx.move(); return true; }
       if (e.code === 'Enter' || e.code === 'Space') { equip(); return true; }
       return false;
     },

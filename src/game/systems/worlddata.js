@@ -4,6 +4,7 @@
 // save-game ids stay stable between sessions.
 import * as THREE from 'three';
 import { G, avenues, streets, streetsAt, mulberry32, inPark, stHalfAt } from '../../world/layout.js'; // (layout2 r9) stHalfAt
+import { t, localize } from '../../ui/i18n.js'; // (i18n) Hebrew names / descriptions via getters (English text stays the fallback)
 
 export const DISTRICTS = [
   { id: 'uws', name: 'Upper West Side', rect: { x0: -800, x1: -234, z0: -2151, z1: -569 }, anchor: [-450, -1250], landmark: 'Baxter Building',
@@ -49,6 +50,9 @@ const ITEMS = [
   ['Pressed Flower', 'From the park bench where Peter asked MJ out.'], ['Handwritten Letter', 'From Uncle Ben. Peter never opens it. He knows it by heart.'],
 ];
 
+// (i18n) district.<id>.name / .landmark / .lmDesc / .photoHint, item.<n>.item / .desc
+for (const d of DISTRICTS) localize(d, 'district.' + d.id, ['name', 'landmark', 'lmDesc', 'photoHint']);
+
 export function districtAt(x, z) {
   for (const d of DISTRICTS) { const r = d.rect; if (x >= r.x0 && x < r.x1 && z >= r.z0 && z < r.z1) return d; }
   return x < 0 ? DISTRICTS[3] : DISTRICTS[4];
@@ -82,7 +86,7 @@ export function buildWorldData(world) {
       usedFp.add(best.i);
     }
     else pos = V(ax, world.groundHeight(ax, az), az);
-    return { id: 'tower_' + d.id, district: d.id, name: `${d.name} Research Tower`, pos };
+    return { id: 'tower_' + d.id, district: d.id, get name() { return t('tower.name', { d: d.name }); }, pos };
   });
 
   // ------------------------------------------------ subway stations (fast travel)
@@ -102,12 +106,12 @@ export function buildWorldData(world) {
         const y = world.groundHeight(px, pz);
         if (Math.abs(y - G.CURB_H) > 0.3) continue;
         return {
-          id: 'station_' + d.id, district: d.id, name: `${stationName(x, z)} Station`, pos: V(px, y, pz), dirZ: -sz,
+          id: 'station_' + d.id, district: d.id, street: stationName(x, z), get name() { return t('station.name', { s: this.street }); }, pos: V(px, y, pz), dirZ: -sz,
           arrive: V(px - sx * (G.AV_WALK * 0.5 - 0.6), y, pz + sz * 3), yaw: sx > 0 ? -Math.PI / 2 : Math.PI / 2,
         };
       }
     }
-    return { id: 'station_' + d.id, district: d.id, name: `${d.name} Station`, pos: V(ax, world.groundHeight(ax, az), az), dirZ: 1, arrive: V(ax, world.groundHeight(ax, az), az + 3), yaw: 0 };
+    return { id: 'station_' + d.id, district: d.id, get name() { return t('station.name', { s: d.name }); }, pos: V(ax, world.groundHeight(ax, az), az), dirZ: 1, arrive: V(ax, world.groundHeight(ax, az), az + 3), yaw: 0 };
   });
 
   // ------------------------------------------------ backpacks (5 per district: 3 rooftop, 2 wall-webbed)
@@ -156,23 +160,23 @@ export function buildWorldData(world) {
     }
   }
   function mkPack(d, pos, normal, mount) {
-    const [name, desc] = ITEMS[itemIdx % ITEMS.length];
+    const k = itemIdx % ITEMS.length, [name, desc] = ITEMS[k];
     const id = `bp_${d.id}_${backpacks.filter(b => b.district === d.id).length}`;
     itemIdx++;
-    return { id, district: d.id, pos, normal, mount, item: name, desc };
+    return localize({ id, district: d.id, pos, normal, mount, item: name, desc }, 'item.' + k, ['item', 'desc']);
   }
 
   // ------------------------------------------------ landmarks (tallest notable building per district)
   const landmarks = DISTRICTS.map(d => {
     const [ax, az] = d.anchor;
-    if (d.id === 'park') return { id: 'lm_park', district: d.id, name: d.landmark, desc: d.lmDesc, target: V(0, 3, -760), radius: 60, fp: null };
+    if (d.id === 'park') return { id: 'lm_park', district: d.id, get name() { return d.landmark; }, get desc() { return d.lmDesc; }, target: V(0, 3, -760), radius: 60, fp: null };
     let best = null;
     for (const f of byDistrict.get(d.id)) {
       if (Math.hypot(f.cx - ax, f.cz - az) > 600 || f.w < 14 || f.d < 14) continue;
       if (!best || f.h > best.h) best = f;
     }
-    if (!best) return { id: 'lm_' + d.id, district: d.id, name: d.landmark, desc: d.lmDesc, target: V(ax, 60, az), radius: 40, fp: null };
-    return { id: 'lm_' + d.id, district: d.id, name: d.landmark, desc: d.lmDesc, target: V(best.cx, best.h * 0.62, best.cz), top: best.h,
+    if (!best) return { id: 'lm_' + d.id, district: d.id, get name() { return d.landmark; }, get desc() { return d.lmDesc; }, target: V(ax, 60, az), radius: 40, fp: null };
+    return { id: 'lm_' + d.id, district: d.id, get name() { return d.landmark; }, get desc() { return d.lmDesc; }, target: V(best.cx, best.h * 0.62, best.cz), top: best.h,
       radius: Math.max(best.w, best.d) * 0.6, fp: { x0: best.x0, x1: best.x1, z0: best.z0, z1: best.z1, h: best.h } };
   });
 
@@ -196,7 +200,7 @@ export function buildWorldData(world) {
     const dir = alongAv ? V(-sx * 0.14, 0.07 + rnd() * 0.08, -sz) : V(-sx, 0.08 + rnd() * 0.08, -sz * 0.14);
     if (d.id === 'park') dir.set(0, 0.12, -1);
     dir.normalize();
-    return { id: 'sp_' + d.id, district: d.id, name: `Secret Photo: ${d.name}`, hint: d.photoHint, pos, dir, fov: 58 };
+    return { id: 'sp_' + d.id, district: d.id, get name() { return t('secretPhoto.name', { d: d.name }); }, get hint() { return d.photoHint; }, pos, dir, fov: 58 };
   });
 
   return { districts: DISTRICTS, towers, stations, backpacks, landmarks, secretPhotos, districtAt };

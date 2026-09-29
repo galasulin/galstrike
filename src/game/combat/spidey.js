@@ -17,6 +17,7 @@
 // finisher (Q, 1 focus) · heal (Z, 1 focus) · hit reactions / knockdown + kip-up.
 import * as THREE from 'three';
 import { PoseLayer } from './poselayer.js';
+import { t as tx } from '../../ui/i18n.js';
 import { clamp, smooth, lerp, yawTo, hdist, angWrap } from './util.js';
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _cp = new THREE.Vector3();
@@ -459,7 +460,7 @@ export function createSpidey(c) {
     M.dashDur = pull; M.clipAt = Math.max(0, pull - windup); M.runT = 0; // the kick connects when he arrives
     if (M.clipAt > 0) layer.stop(0.1); else if (!M.clipOn) playStrikeClip();
   }
-  const deny = msg => { c.hud.flash(msg); c.sfx('deny'); };
+  const deny = msg => { c.hud.flash(tx('cmb.' + msg, null, msg)); c.sfx('deny'); };
   // start the buffered action k if possible; returns false when the key should keep its traversal meaning instead
   // (E = web-zip, Q = quick web boost) — combat never swallows a key it has no use for
   function doAction(k, I) {

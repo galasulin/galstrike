@@ -11,6 +11,7 @@
 //   mouseSensitivity, invertY  -> ALREADY applied to input.state.look by the systems input layer (lookScaledByInput=true);
 //                                 traversal/camera must NOT apply them again.
 import { emit } from './events.js';
+import { localize } from '../../ui/i18n.js';
 
 export const SKILL_TREES = [
   { id: 'webslinger', name: 'Webslinger', desc: 'Traversal mastery. Faster swings, higher jumps, harder launches.' },
@@ -35,6 +36,9 @@ export const SKILLS = [
   { id: 'photog', tree: 'innovator', x: .25, y: .7, req: ['detector'], name: 'Photojournalist', icon: 'camera', desc: 'The Bugle pays better for sharper shots.', eff: 'Photo XP +50% · landmark range +40%', apply: p => { p.photoXp *= 1.5; p.landmarkRange *= 1.4; } },
   { id: 'gps', tree: 'innovator', x: .75, y: .7, req: ['cred'], name: 'Smart GPS', icon: 'gps', desc: 'Suit HUD plots the fastest rooftop route.', eff: 'Waypoint route + distance readout', apply: p => { p.gpsDistance = true; } },
 ];
+
+for (const t of SKILL_TREES) localize(t, 'tree.' + t.id, ['name', 'desc']); // (i18n)
+for (const s of SKILLS) localize(s, 'skill.' + s.id, ['name', 'desc', 'eff']);
 
 export function defaultParams() {
   return {

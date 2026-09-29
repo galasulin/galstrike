@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { addShaderPatch } from '../../render/materials.js';
 import { setSuitFabric } from '../../player/suitfabric.js';
 import { setWebVenom } from '../../player/web.js';
+import { localize } from '../../ui/i18n.js';
 
 const C = (r, g, b) => new THREE.Vector3(r, g, b);
 const L = hex => { const c = new THREE.Color(hex); return C(c.r, c.g, c.b); }; // sRGB hex -> linear albedo
@@ -57,6 +58,7 @@ export const SUITS = [
     red: L('#8e0d16'), blue: L('#131318'), white: L('#131318'), black: L('#2b060a'),
     rough: [0.55, 0.7, 0.5, 0.6], metal: [0, 0, 0, 0] },
 ];
+for (const s of SUITS) localize(s, 'suit.' + s.id, ['name', 'desc']); // (i18n)
 
 export function createSuits(ctx) {
   const uniforms = {

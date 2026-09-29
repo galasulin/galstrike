@@ -2,19 +2,21 @@
 // links, a detail panel with the gameplay effect, and Unlock (1 skill point). Effects land in ctx.params.
 import { icon } from './icons.js';
 import { SKILLS, SKILL_TREES } from '../../game/systems/progression.js';
+import { t } from '../i18n.js';
 
 export function createSkillsPage(sys) {
   const { prog, audio } = sys;
   const el = document.createElement('div'); el.className = 'sys-skills';
-  el.innerHTML = `<div class="trees">${SKILL_TREES.map(t => `<div class="sys-tree sys-panel cut interactive" data-t="${t.id}"><svg class="links"></svg>
-      <div class="sys-h3">${t.name}</div><div class="sys-p" style="font-size:13px;color:var(--sys-dim);max-width:80%">${t.desc}</div><div class="nodes"></div></div>`).join('')}</div>
+  el.innerHTML = `<div class="trees">${SKILL_TREES.map(tr => `<div class="sys-tree sys-panel cut interactive" data-t="${tr.id}"><svg class="links"></svg>
+      <div class="sys-h3 tn"></div><div class="sys-p td" style="font-size:13px;color:var(--sys-dim);max-width:80%"></div><div class="nodes"></div></div>`).join('')}</div>
     <div class="detail sys-panel cut interactive"><div class="ic"></div><div class="sys-h3 tr"></div><h2 class="sys-h2 nm"></h2><div class="state"></div><p class="sys-p ds"></p><div class="eff"></div>
       <div class="skstats"></div><div class="skstats next"></div>
-      <div class="acts"><button class="sys-btn red ub">Unlock · 1 SP</button></div></div>`;
+      <div class="acts"><button class="sys-btn red ub"></button></div></div>`;
   let sel = SKILLS[0].id;
   function status(s) { return prog.has(s.id) ? 'owned' : prog.canUnlock(s.id) ? 'avail' : 'locked'; }
   function render() {
     for (const tree of el.querySelectorAll('.sys-tree')) {
+      const TD = SKILL_TREES.find(x => x.id === tree.dataset.t); tree.querySelector('.tn').textContent = TD.name; tree.querySelector('.td').textContent = TD.desc;
       const list = SKILLS.filter(s => s.tree === tree.dataset.t);
       const nodes = tree.querySelector('.nodes');
       nodes.innerHTML = list.map(s => `<div class="sys-node ${status(s)} ${s.id === sel ? 'sel' : ''}" data-id="${s.id}" style="left:${s.x * 100}%;top:${s.y * 100}%"><div class="hex"></div>${icon(s.icon, { color: '#fff', sw: 2.2 })}<label>${s.name}</label></div>`).join('');
@@ -36,25 +38,25 @@ export function createSkillsPage(sys) {
     }
     const s = SKILLS.find(k => k.id === sel), stt = status(s);
     el.querySelector('.detail .ic').innerHTML = `<div class="sys-node ${stt}" style="position:relative;transform:none;left:0;top:0;width:70px;height:78px"><div class="hex"></div>${icon(s.icon, { color: '#fff', sw: 2.2 })}</div>`;
-    el.querySelector('.tr').textContent = SKILL_TREES.find(t => t.id === s.tree).name;
+    el.querySelector('.tr').textContent = SKILL_TREES.find(x => x.id === s.tree).name;
     el.querySelector('.nm').textContent = s.name; el.querySelector('.ds').textContent = s.desc; el.querySelector('.eff').textContent = s.eff;
     const req = (s.req || []).filter(r => !prog.has(r)).map(r => SKILLS.find(k => k.id === r).name);
-    el.querySelector('.state').textContent = stt === 'owned' ? 'Unlocked' : stt === 'avail' ? (prog.skillPoints ? 'Available' : 'Need a skill point — level up') : `Requires ${req.join(' + ')}`;
+    el.querySelector('.state').textContent = stt === 'owned' ? t('sk.unlocked') : stt === 'avail' ? (prog.skillPoints ? t('sk.available') : t('sk.needPoint')) : t('sk.requires', { r: req.join(' + ') });
     // live traversal stats (current vs. with this skill) + what can be unlocked next
     const P = prog.params, preview = {}; if (stt !== 'owned') { const tmp = { ...P }; s.apply(tmp); Object.assign(preview, tmp); }
-    const ROWS = [['swingSpeed', 'Swing speed'], ['swingReleaseBoost', 'Release boost'], ['webRange', 'Web range'], ['zipSpeed', 'Web-zip'], ['pointLaunch', 'Point launch'], ['jump', 'Jump'], ['wallRunSpeed', 'Wall run'], ['diveSpeed', 'Dive']];
-    el.querySelector('.skstats:not(.next)').innerHTML = '<div class="sys-h3">Traversal</div>' + ROWS.map(([k, n]) => {
+    const ROWS = ['swingSpeed', 'swingReleaseBoost', 'webRange', 'zipSpeed', 'pointLaunch', 'jump', 'wallRunSpeed', 'diveSpeed'].map(k => [k, t('sk.stat.' + k)]);
+    el.querySelector('.skstats:not(.next)').innerHTML = `<div class="sys-h3">${t('sk.traversal')}</div>` + ROWS.map(([k, n]) => {
       const cur = P[k] ?? 1, nxt = preview[k] ?? cur, sc = v => Math.min(1, (v - 1) / 0.5);
-      return `<div class="row">${n}<div class="bar"><i style="width:${sc(cur) * 100}%"></i>${nxt > cur ? `<s style="left:${sc(cur) * 100}%;width:${(sc(nxt) - sc(cur)) * 100}%"></s>` : ''}</div><b>${nxt > cur ? `<span style="color:var(--sys-gold)">+${Math.round((nxt - 1) * 100)}%</span>` : `+${Math.round((cur - 1) * 100)}%`}</b></div>`;
+      return `<div class="row">${n}<div class="bar"><i style="width:${sc(cur) * 100}%"></i>${nxt > cur ? `<s style="left:${sc(cur) * 100}%;width:${(sc(nxt) - sc(cur)) * 100}%"></s>` : ''}</div><b dir="ltr">${nxt > cur ? `<span style="color:var(--sys-gold)">+${Math.round((nxt - 1) * 100)}%</span>` : `+${Math.round((cur - 1) * 100)}%`}</b></div>`;
     }).join('');
     const avail = SKILLS.filter(k => prog.canUnlock(k.id) && k.id !== s.id).slice(0, 4);
     const nx = el.querySelector('.skstats.next');
-    nx.innerHTML = avail.length ? '<div class="sys-h3" style="margin-top:14px">Available next</div>' + avail.map(k => `<div class="nx" data-id="${k.id}">${icon(k.icon, { color: '#fff', sw: 2.2 })}${k.name}</div>`).join('') : '';
+    nx.innerHTML = avail.length ? `<div class="sys-h3" style="margin-top:14px">${t('sk.next')}</div>` + avail.map(k => `<div class="nx" data-id="${k.id}">${icon(k.icon, { color: '#fff', sw: 2.2 })}${k.name}</div>`).join('') : '';
     nx.querySelectorAll('.nx').forEach(n => n.addEventListener('click', () => { sel = n.dataset.id; audio.sfx.move(); render(); }));
-    const b = el.querySelector('.ub'); b.disabled = stt !== 'avail' || prog.skillPoints < 1; b.textContent = stt === 'owned' ? 'Unlocked' : 'Unlock · 1 SP';
+    const b = el.querySelector('.ub'); b.disabled = stt !== 'avail' || prog.skillPoints < 1; b.textContent = stt === 'owned' ? t('sk.unlocked') : t('sk.unlockBtn');
   }
   function unlock() {
-    if (prog.unlock(sel)) { audio.sfx.levelUp(); sys.ui.toast({ title: 'Skill Unlocked', text: SKILLS.find(k => k.id === sel).name, icon: 'xp', tone: 'gold', sound: null }); }
+    if (prog.unlock(sel)) { audio.sfx.levelUp(); sys.ui.toast({ title: t('sk.toast'), text: SKILLS.find(k => k.id === sel).name, icon: 'xp', tone: 'gold', sound: null }); }
     else audio.sfx.deny();
     render();
   }
@@ -70,9 +72,9 @@ export function createSkillsPage(sys) {
     if (best) { sel = best.id; audio.sfx.move(); render(); }
   }
   return {
-    id: 'skills', title: 'Skills', el,
-    hints: [['Click', 'Select'], ['Enter', 'Unlock']],
-    footer: () => `${prog.skillPoints} SKILL POINT${prog.skillPoints === 1 ? "" : "S"} AVAILABLE`,
+    id: 'skills', get title() { return t('tab.skills'); }, el,
+    get hints() { return [[t('key.click'), t('hint.select')], ['Enter', t('hint.unlock')]]; },
+    footer: () => t('sk.foot', { n: prog.skillPoints }),
     show() { render(); },
     key(e) {
       if (e.code === 'ArrowRight' || e.code === 'KeyD') { move(1, 0); return true; }

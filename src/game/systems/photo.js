@@ -6,6 +6,7 @@
 // drawing buffer is still valid without preserveDrawingBuffer).
 import * as THREE from 'three';
 import { emit } from './events.js';
+import { localize } from '../../ui/i18n.js';
 
 export const FILTERS = [
   { id: 'none', name: 'None' },
@@ -33,6 +34,7 @@ export const STICKERS = [
 ];
 // stickers are composited after the frame, both on the live overlay and into captures.
 // list items: {id, x, y (0..1 of the frame), s (scale), r (radians)}; each sticker is drawn centred on its origin.
+for (const [k, L] of [['filter', FILTERS], ['frame', FRAMES], ['pose', POSES], ['sticker', STICKERS]]) for (const x of L) localize(x, `photo.${k}.${x.id}`, ['name']); // (i18n)
 export const STICKER_HOME = { thwip: [0.78, 0.66], emblem: [0.9, 0.16], stamp: [0.86, 0.8], bugle: [0.16, 0.74], burst: [0.2, 0.28], sig: [0.2, 0.84] };
 export const STICKER_R = { thwip: 150, emblem: 72, stamp: 110, bugle: 145, burst: 150, sig: 130 }; // hit radius (px @1080)
 export function newSticker(id) { const [x, y] = STICKER_HOME[id] || [0.5, 0.5]; return { id, x, y, s: 1, r: id === 'thwip' ? -0.18 : id === 'bugle' ? -0.2 : id === 'burst' ? 0.12 : 0 }; }

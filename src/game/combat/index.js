@@ -17,6 +17,7 @@ import { Enemy } from './enemy.js';
 import { createSpidey } from './spidey.js';
 import { createProps } from './props.js';
 import { createHud } from './hud.js';
+import { t as tx } from '../../ui/i18n.js';
 import { createCombatInput } from './input.js';
 import { clamp, smooth, damp, lerp, angWrap, yawTo, hdist, rnd, UP } from './util.js';
 
@@ -115,7 +116,7 @@ export function initCombat(ctx) {
   c.onEnemyInterrupted = e => { c.releaseToken(e); c.clearThreats(e); };
   c.onDodge = (t, perfect) => {
     if (perfect) {
-      c.slowmo(0.85, 0.22, 0.35); c.hud.banner('PERFECT DODGE'); me.focus = Math.min(3, me.focus + 0.35);
+      c.slowmo(0.85, 0.22, 0.35); c.hud.banner(tx('cmb.perfectDodge')); me.focus = Math.min(3, me.focus + 0.35);
       P.cam?.impact?.(0.15); c.fx.setSense(1, t?.kind === 'gun' ? 1 : 0);
     }
   };
@@ -158,19 +159,19 @@ export function initCombat(ctx) {
   c.heal = n => {
     me.hp = Math.min(me.maxHp, me.hp + n);
     for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; c.fx.add.emit({ pos: _v.set(P.position.x + Math.cos(a) * 0.6, P.position.y - 0.6 + Math.random() * 0.4, P.position.z + Math.sin(a) * 0.6), vel: _v2.set(0, rnd(1.5, 3), 0), life: 0.8, size: 0.06, size1: 0.02, color: [1.5, 3.5, 2], tile: 0, drag: 1 }); }
-    c.hud.flash('Healed'); c.sfx('thwip', 0.6);
+    c.hud.flash(tx('cmb.healed')); c.sfx('thwip', 0.6);
   };
   c.cine = (target, dur, kind = 'finisher') => { c.cineS = { target, t: 0, dur, side: null, kind }; if (kind === 'finisher') c.slowmo(1.2, 0.45, 0.4); else c.slowmo(0.7, 0.4, 0.3); };
   c.throwAway = (obj, vel) => { c.loose.push({ obj, vel: vel.clone(), t: 0 }); };
   // loss condition: Spider-Man knocked out -> the crime fails, the thugs scatter, he gets back up at full health
   c.onPlayerDefeated = () => {
-    const f = c.fight; c.hud.banner('DEFEATED');
+    const f = c.fight; c.hud.banner(tx('cmb.defeated'));
     emit('player:defeated', { crime: f?.crime?.id || null });
     if (!f) return;
     if (f.crime) { const cr = f.crime; releaseFight(true); emit('crime:resolve', { id: cr.id, success: false }); }
     else { endFight(false); }
   };
-  c.onPlayerRecovered = () => { for (const e of c.enemies) e.cd = Math.max(e.cd, rnd(1.5, 3)); c.hud.flash('Back on your feet'); };
+  c.onPlayerRecovered = () => { for (const e of c.enemies) e.cd = Math.max(e.cd, rnd(1.5, 3)); c.hud.flash(tx('cmb.backUp')); };
   c.onEnemyOut = (e, how) => {
     c.releaseToken(e); c.clearThreats(e);
     e.actor.hp = 0; e.actor.down = true; e.actor.alive = false; // crime records (crimes.active.thugs[])
@@ -261,7 +262,7 @@ export function initCombat(ctx) {
     c.threats.length = 0; c.meleeToken = c.gunToken = null;
     if (won && f.crime) emit('crime:cleared', { id: f.crime.id });
     emit('crime:zone', { id: f.crime?.id || 'cmb-fight', pos: f.center.clone(), radius: 15, active: false, type: f.crime?.type || 'fight' });
-    if (won) { c.hud.banner('AREA CLEAR'); c.slowmo(0.8, 0.35, 0.5); }
+    if (won) { c.hud.banner(tx('cmb.areaClear')); c.slowmo(0.8, 0.35, 0.5); }
     setTimeout(() => { if (!c.fight) c.hud.show(false); }, 3500);
     c.leftovers = { t: 0, center: f.center, spawned: f.spawned };
   }

@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { emit } from './events.js';
 import { TOWER_H } from './markers.js';
+import { t as tr } from '../../ui/i18n.js';
 
 export function createTowers(sys) {
   const { data, save, markers, ui, audio, prog } = sys;
@@ -25,8 +26,8 @@ export function createTowers(sys) {
       // (waits for the player to be back in normal play if photo mode / a menu is open)
       const tryReveal = (n = 0) => { if (sys.flow.isPlaying && !sys.travel?.traveling) { sys.pause.show('map'); sys.pause.pages.find(p => p.id === 'map')?.reveal?.(t.district); } else if (n < 60) setTimeout(() => tryReveal(n + 1), 500); };
       if (sys.flow.isPlaying) activationCam(t, () => tryReveal()); else setTimeout(tryReveal, 2600);
-      ui.banner('DISTRICT UNLOCKED', d.name, 'Collectibles and crimes revealed on the map');
-      setTimeout(() => ui.toast({ title: 'Fast Travel Unlocked', text: station?.name || '', icon: 'station', tone: 'cyan' }), 1400);
+      ui.banner(tr('tower.unlockedCap'), d.name, tr('tower.unlockedSub'));
+      setTimeout(() => ui.toast({ title: tr('tower.ftUnlocked'), text: station?.name || '', icon: 'station', tone: 'cyan' }), 1400);
       prog.addXp(400, 'tower');
     }
     emit('tower:activated', { id: t.id, district: t.district });
@@ -74,7 +75,7 @@ export function createTowers(sys) {
         if (isActive(t.id)) continue;
         const dh = Math.hypot(t.pos.x - p.x, t.pos.z - p.z), dy = p.y - t.pos.y;
         if (dh < 9.5 && dy > -2 && dy < 8) {
-          return { id: t.id, pos: t.panel || (t.panel = t.pos.clone().setY(t.pos.y + 2.2)), label: 'Activate Research Tower', sub: data.districts.find(d => d.id === t.district).name, hold: 1.6, priority: 5,
+          return { id: t.id, pos: t.panel || (t.panel = t.pos.clone().setY(t.pos.y + 2.2)), label: tr('prompt.activateTower'), sub: data.districts.find(d => d.id === t.district).name, hold: 1.6, priority: 5,
             tick: (k) => audio.sfx.towerCharge(k), action: () => activate(t) };
         }
       }

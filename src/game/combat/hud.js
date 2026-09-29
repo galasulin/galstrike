@@ -3,6 +3,7 @@
 // controls hint strip at the start of a fight, transient messages.
 import * as THREE from 'three';
 import { clamp } from './util.js';
+import { t as tx, onLangChange } from '../../ui/i18n.js';
 
 const CSS = `
 #cmb-hud{position:fixed;inset:0;pointer-events:none;z-index:25;font-family:var(--sys-head,'Barlow Condensed','Arial Narrow',sans-serif);color:#fff;opacity:0;transition:opacity .45s}
@@ -47,17 +48,22 @@ export function createHud(c) {
   const root = document.createElement('div'); root.id = 'cmb-hud';
   root.innerHTML = `
     <div class="vig"></div><div class="slow"></div>
-    <div class="bars"><div class="lbl"><span>HEALTH</span><span class="hpn">100</span></div>
+    <div class="bars"><div class="lbl"><span class="hpl"></span><span class="hpn">100</span></div>
       <div class="hp"><i class="trail"></i><i class="fill"></i></div>
       <div class="focus"><b><i></i></b><b><i></i></b><b><i></i></b></div></div>
-    <div class="combo"><div class="n"><small>x</small><span>0</span></div><div class="t">COMBO</div><div class="bar"></div></div>
+    <div class="combo"><div class="n"><small>x</small><span>0</span></div><div class="t"></div><div class="bar"></div></div>
     <div class="arrows"></div><div class="ebars"></div>
-    <div class="banner">PERFECT DODGE</div><div class="msg"></div>
-    <div class="hint">
-      <span><kbd>LMB</kbd>Attack</span><span><kbd>Hold LMB</kbd>Launch / Slam</span><span><kbd>C</kbd>Dodge</span><span><kbd>Space</kbd>Jump (evades)</span>
-      <span><kbd>E</kbd>Web Strike</span><span><kbd>F</kbd>Web</span><span><kbd>R</kbd>Throw</span><span><kbd>Q</kbd>Finisher</span><span><kbd>Z</kbd>Heal</span></div>`;
+    <div class="banner"></div><div class="msg"></div>
+    <div class="hint"></div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
+  // (i18n) static labels + the controls strip, rebuilt when the language changes
+  const labels = () => {
+    $('.hpl').textContent = tx('cmb.health'); $('.combo .t').textContent = tx('cmb.combo');
+    $('.hint').innerHTML = [['LMB', 'cmb.h.attack'], [tx('cmb.k.holdLmb'), 'cmb.h.launch'], ['C', 'cmb.h.dodge'], ['Space', 'cmb.h.jump'], ['E', 'cmb.h.strike'], ['F', 'cmb.h.web'], ['R', 'cmb.h.throw'], ['Q', 'cmb.h.finisher'], ['Z', 'cmb.h.heal']]
+      .map(([k, l]) => `<span><kbd>${k}</kbd>${tx(l)}</span>`).join('');
+  };
+  labels(); onLangChange(labels);
   const fill = $('.hp .fill'), trail = $('.hp .trail'), hpBox = $('.hp'), hpn = $('.hpn');
   const segs = [...root.querySelectorAll('.focus b')];
   const combo = $('.combo'), comboN = $('.combo .n span'), comboBar = $('.combo .bar');
