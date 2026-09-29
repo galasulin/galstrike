@@ -1,5 +1,5 @@
 // OWNER: systems engineer. Pause menu shell (Esc / P / Start): top tab bar (Q/E or LB/RB to switch), level/XP/SP
-// readout, animated page transitions, footer key hints. Pages: Map, Missions, Suits, Skills, Collectibles, Photo Mode, Settings.
+// readout, animated page transitions, footer key hints. Pages: Map, Missions, Achievements, Suits, Skills, Collectibles, Photo Mode, Settings.
 import { icon } from './icons.js';
 import { createMapPage } from './map.js';
 import { createSuitsPage } from './suits.js';
@@ -7,6 +7,7 @@ import { createSkillsPage } from './skills.js';
 import { createCollectiblesPage } from './collectibles.js';
 import { createSettingsPage } from './settings.js';
 import { createMissionsPage } from './missions.js';
+import { createAchievementsPage } from './achievements.js';
 
 export function createPauseMenu(sys) {
   const { ui, audio, flow, prog, save } = sys;
@@ -21,7 +22,7 @@ export function createPauseMenu(sys) {
   const body = el.querySelector('.body'), tabsEl = el.querySelector('.tl'), hintsEl = el.querySelector('.hints'), leftEl = el.querySelector('.foot .left');
 
   const pages = [
-    createMapPage(sys), createMissionsPage(sys), createSuitsPage(sys), createSkillsPage(sys), createCollectiblesPage(sys),
+    createMapPage(sys), createMissionsPage(sys), createAchievementsPage(sys), createSuitsPage(sys), createSkillsPage(sys), createCollectiblesPage(sys),
     { id: 'photo', title: 'Photo Mode', action: () => { close(true); sys.photo.enter(); sys.photoUI.open(); } },
     createSettingsPage(sys),
   ];
@@ -47,6 +48,7 @@ export function createPauseMenu(sys) {
     p.el.classList.toggle('from-left', i < cur); void p.el.offsetWidth;
     cur = i; last = i; p.el.classList.add('on'); p.el.classList.remove('from-left');
     tabEls.forEach((t, k) => t.classList.toggle('on', k === i));
+    { const box = tabsEl.closest('.tabs'); if (box.scrollWidth > box.clientWidth) { const b = box.getBoundingClientRect(), r = tabEls[i].getBoundingClientRect(); box.scrollLeft += (r.left + r.width / 2) - (b.left + b.width / 2); } } // narrow screens: keep the current tab in view
     el.classList.toggle('see-through', !!p.seeThrough);
     hintsEl.innerHTML = (p.hints || []).map(([k, t]) => `<span><span class="sys-key">${k}</span>${t}</span>`).join('') + '<span><span class="sys-key">Esc</span>Resume</span>';
     leftEl.textContent = p.footer?.() || '';
@@ -87,7 +89,7 @@ export function createPauseMenu(sys) {
   });
   sys.events.on('flow:lockLost', () => { if (!sys.photo.active) show(); });
   const refreshFoot = () => { if (open) { refreshStats(); leftEl.textContent = pages[cur]?.footer?.() || ''; } };
-  for (const ev of ['xp:gain', 'skill:unlocked', 'suit:changed', 'waypoint:set', 'collectible:pickup', 'tower:activated', 'settings:changed', 'mission:complete']) sys.events.on(ev, refreshFoot);
+  for (const ev of ['xp:gain', 'skill:unlocked', 'suit:changed', 'waypoint:set', 'collectible:pickup', 'tower:activated', 'settings:changed', 'mission:complete', 'achievement:unlocked']) sys.events.on(ev, refreshFoot);
 
   // gamepad: Start = pause toggle, Select/View = map, LB/RB tabs, B back
   const padPrev = {};

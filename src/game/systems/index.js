@@ -4,7 +4,7 @@
 //   ctx.events  (bus: on/emit, see events.js)     ctx.params (traversal tuning from skills, see progression.js)
 //   ctx.flow    (pause/photo/travel modes)         window.__sys (everything, for debugging / playtests)
 // Debug hooks (console / playtest "eval"): __sys.debug.{xp(n), unlockAll(), activateTower(id|'all'), crime(type), tp(x,z,y),
-//   waypoint(x,z), grabNearestBackpack(), openMenu(tab), photo(), state(), mission.{start(id), skip(), fail(), abandon(), state()}}.  window.__ptState is extended with systems state.
+//   waypoint(x,z), grabNearestBackpack(), openMenu(tab), photo(), state(), mission.{start(id), skip(), fail(), abandon(), state()}, ach.{state(), unlockAll(), unlock(id), reset()}}.  window.__ptState is extended with systems state.
 import * as THREE from 'three';
 import events, { on, emit } from './events.js';
 import { createSave } from './save.js';
@@ -22,6 +22,7 @@ import { createPhoto } from './photo.js';
 import { createMissions } from './missions.js';
 import { createSuits, SUITS } from './suits.js';
 import { createSkillFx } from './skillfx.js';
+import { createAchievements } from './achievements.js';
 import { createUI } from '../../ui/menus/ui.js';
 import { createPauseMenu } from '../../ui/menus/pause.js';
 import { createTitle } from '../../ui/menus/title.js';
@@ -89,6 +90,7 @@ export function initSystems(ctx) {
   sys.pause = createPauseMenu(sys);
   sys.photoUI = createPhotoUI(sys);
   sys.missions = createMissions(sys); // story missions + scoring (after the pause menu: its result-panel keys win)
+  sys.ach = createAchievements(sys); // achievements + records (stats counters from the event bus)
   // developer menu (~): dev server, or ?dev on a build (registered after the pause menu: its keys win)
   if (import.meta.env?.DEV || new URLSearchParams(location.search).has('dev')) sys.dev = createDevMenu(sys);
   // user r-symbiote: Classic / Stealth / Negative / Noir were removed; old saves wearing one fall back to Advanced
@@ -317,6 +319,7 @@ export function initSystems(ctx) {
       sys.photoUI.update(dt);
       ui.update(dt);
       audio.update(dt, { camera: ctx.camera, playerPos: p, speed: playing ? (ctx.player.velocity?.length?.() || 0) : 0, ground: ctx.world.groundHeight(p.x, p.z), swinging: ['swing', 'air'].includes(ctx.player.anim?.mode || ctx.player.mode), mode: ctx.player.anim?.mode || ctx.player.mode || '', inCombat: !!(ctx.combat?.engaged ?? window.__cmb?.state?.engaged) }); // swing + the air between webs (r10j); (audio r1) mode / combat drive the music's swing layers
+      sys.ach.update(dt, playing);
       if (!playing) { ui.pins([], false); ui.prompt(null); return; }
       sys.skillfx.update(dt);
       traversalEvents(dt);
@@ -381,9 +384,10 @@ export function initSystems(ctx) {
     grabNearestBackpack() { let best = null, bd = Infinity; for (const b of data.backpacks) { if (save.state.backpacks.includes(b.id)) continue; const d = b.pos.distanceTo(ctx.player.position); if (d < bd) { bd = d; best = b; } } if (best) sys.collect.pickupBackpack(best); return best?.id; },
     openMenu(tab = 'map') { sys.pause.show(tab); }, closeMenu() { sys.pause.close(); },
     photo() { if (sys.pause.open) sys.pause.close(true); sys.photo.enter(); sys.photoUI.open(); },
-    suit(id) { save.state.suit = sys.suits.apply(id).id; },
+    suit(id) { save.state.suit = sys.suits.apply(id).id; emit('suit:changed', { id: save.state.suit }); },
     fastTravel(id) { const s = data.stations.find(s => s.id === id || s.district === id); if (s && !save.state.stations.includes(s.id)) save.state.stations.push(s.id); return sys.travel.fastTravel(s); },
     mission: sys.missions.debug, // start(id), skip(), fail(), abandon(), unlockAll(), state(), ringPos(i)
+    ach: sys.ach.debug, // state(), unlockAll(), unlock(id), reset(), check()
     state() { const st = save.state; return { mission: sys.missions.active?.def.id || null, mode: flow.mode, level: st.level, xp: st.xp, sp: st.skillPoints, towers: st.towers.length, backpacks: st.backpacks.length, landmarks: st.landmarks.length, photos: st.secretPhotos.length, crime: sys.crimes.active?.type || null, crimeState: sys.crimes.active?.state || null, waypoint: !!sys.travel.waypoint, route: sys.travel.route?.length || 0, suit: st.suit, menu: sys.pause.tab || null }; },
   };
   sys.title = createTitle(sys); // (GalStrike) start screen, registered last so its keys win
