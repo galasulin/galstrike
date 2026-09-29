@@ -71,6 +71,9 @@ The project is by **Gal Asulin** ([@galasulin](https://github.com/galasulin)). T
 - **On-screen controls** switch on with the first touch: a floating joystick, drag-to-look, Swing, Jump, Zip, Boost, Dive and Parkour buttons, a context **Use** button near towers, and a separate combat button set.
 - Pinch-zoom and scrolling are blocked, safe areas are respected, and phones in portrait get a *rotate your device* hint. Desktop is untouched.
 
+### 🇮🇱 English and Hebrew *(new)*
+- A complete **Hebrew interface** with right-to-left layout and bundled Hebrew fonts (**Secular One** for headings, **Heebo** for text). Switch live with the **EN / עב** toggle on the start screen or in Settings. Hebrew is picked automatically for Hebrew-language browsers, and `?lang=he` / `?lang=en` forces a language.
+
 ### 🔊 Sound, time and weather *(new)*
 - An original, procedurally made score with day and night layers that react to swinging speed, plus positional sirens and alarms.
 - The **start screen** has a sound panel (master, music and effects sliders, plus mute; <kbd>N</kbd> mutes in game) and a **time and weather picker**: day, morning, sunset, dusk, night or rain.
@@ -160,6 +163,7 @@ The new emblems (five-point star, Star of David, arc reactor) are signed-distanc
 | **Story missions** | 8-mission chain with races, scoring, ranks and saved bests, plus a Missions page in the pause menu. |
 | **Achievements** | 21 achievements, a Records panel and gold unlock toasts. |
 | **Touch controls** | Full on-screen controls for tablets and phones. |
+| **Hebrew UI** | Full RTL Hebrew translation with Secular One and Heebo fonts, switchable live. |
 | **Start screen setup** | Time and weather picker, sound sliders and mute. |
 | **Live demo** | Asset URLs are base-path aware, and a GitHub Actions workflow builds and deploys to GitHub Pages on every push. |
 
@@ -212,6 +216,7 @@ npm run preview    # serve the build on http://127.0.0.1:4173
 |---|---|
 | `?q=low` · `?q=med` · `?q=high` | Force a graphics preset |
 | `?notitle` | Skip the start screen |
+| `?lang=he` · `?lang=en` | Force the interface language |
 | `?nodynres` | Turn off dynamic resolution |
 | `?newgame` | Wipe the saved progress |
 | `?fresh` | Don't restore the last player position |
@@ -286,7 +291,7 @@ galstrike/
 - [ ] More suits and suit abilities
 - [x] Story missions with objectives and scoring
 - [x] Achievements and records
-- [ ] Full Hebrew interface (in progress)
+- [x] Full Hebrew interface (RTL, Secular One + Heebo)
 - [ ] Leaderboards
 
 ---
@@ -302,6 +307,7 @@ galstrike/
 - 📜 **8 משימות סיפור** עם מרוצים, ניקוד ודירוג S/A/B/C, ו-**21 הישגים** ושיאים.
 - 📱 **תמיכה במגע ובטאבלטים** עם ג'ויסטיק וכפתורים על המסך.
 - 🔊 **סאונד, שעה ומזג אוויר** מתפריט הפתיחה.
+- 🇮🇱 **ממשק מלא בעברית** מימין לשמאל, עם פונטים Secular One ו-Heebo, ומעבר בין עברית לאנגלית בלחיצה.
 - ⚡ **ביצועים:** בחירת איכות אוטומטית לפי כרטיס המסך, רזולוציה דינמית, ותנועת מצלמה חלקה (קלט עכבר גולמי).
 
 **▶ [לשחק עכשיו](https://galasulin.github.io/galstrike/)**. מומלץ מחשב עם כרטיס מסך נפרד. הטעינה הראשונה לוקחת כדקה.
