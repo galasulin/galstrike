@@ -209,7 +209,7 @@ export const en = {
   'bind.pad.ls': 'Left Stick', 'bind.pad.rs': 'Right Stick', 'bind.pad.r2ground': 'R2 (ground)', 'bind.pad.interact': 'D-pad Up / X / Square (hold)', 'bind.pad.map': 'Touchpad / View',
   // title screen
   'title.kick': 'Manhattan · Open World', 'title.by': 'A game by {name} · <span dir="rtl" lang="he">משחק מאת גל אסולין</span>', 'title.author': 'Gal Asulin', 'title.play': 'Play',
-  'title.hint': 'Enter / A to select · ↑ ↓ to move', 'title.tod': 'Time & weather', 'title.tod.day': 'Day', 'title.tod.morning': 'Morning', 'title.tod.sunset': 'Sunset',
+  'title.hint': 'Enter / A to select · ↑ ↓ to move', 'title.tod': 'Time & weather', 'title.quick': '⚙ Sound & weather', 'title.tod.day': 'Day', 'title.tod.morning': 'Morning', 'title.tod.sunset': 'Sunset',
   'title.tod.dusk': 'Dusk', 'title.tod.night': 'Night', 'title.tod.overcast': 'Rain', 'title.sound': 'Sound', 'title.master': 'Master',
   'title.sndnote': 'Sound starts with your first click or key press. Press N in game to mute.', 'title.soundOnBtn': 'Sound on · click to mute', 'title.soundOffBtn': 'Sound off · click to unmute',
   'title.soundOn': 'Sound on', 'title.soundOff': 'Sound off', 'title.pressMute': 'Press N to mute', 'title.pressUnmute': 'Press N to unmute',
@@ -343,7 +343,7 @@ export const he = {
   'bind.k.lmbHold': 'כפתור שמאלי (החזק)', 'bind.k.dodge': 'C / Ctrl · קפיצה ב-Space מתחמקת מאזהרה', 'bind.k.fHold': 'F (החזק)', 'bind.k.v': 'V (או תפריט השהיה)',
   'bind.pad.ls': 'סטיק שמאלי', 'bind.pad.rs': 'סטיק ימני', 'bind.pad.r2ground': 'R2 (קרקע)', 'bind.pad.interact': 'D-pad למעלה / X / ריבוע (החזק)', 'bind.pad.map': 'משטח מגע / View',
   'title.kick': 'מנהטן · עולם פתוח', 'title.by': 'משחק מאת {name}', 'title.author': 'גל אסולין', 'title.play': 'שחק',
-  'title.hint': 'Enter / A לבחירה · ↑ ↓ לתזוזה', 'title.tod': 'שעה ומזג אוויר', 'title.tod.day': 'יום', 'title.tod.morning': 'בוקר', 'title.tod.sunset': 'שקיעה',
+  'title.hint': 'Enter / A לבחירה · ↑ ↓ לתזוזה', 'title.tod': 'שעה ומזג אוויר', 'title.quick': '⚙ סאונד ומזג אוויר', 'title.tod.day': 'יום', 'title.tod.morning': 'בוקר', 'title.tod.sunset': 'שקיעה',
   'title.tod.dusk': 'בין ערביים', 'title.tod.night': 'לילה', 'title.tod.overcast': 'גשם', 'title.sound': 'סאונד', 'title.master': 'ראשי',
   'title.sndnote': 'הסאונד מתחיל עם הקליק או הלחיצה הראשונים. N משתיק במשחק.', 'title.soundOnBtn': 'סאונד פועל · לחץ להשתקה', 'title.soundOffBtn': 'סאונד מושתק · לחץ להפעלה',
   'title.soundOn': 'הסאונד פועל', 'title.soundOff': 'הסאונד הושתק', 'title.pressMute': 'N להשתקה', 'title.pressUnmute': 'N להפעלת הסאונד',

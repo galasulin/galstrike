@@ -44,8 +44,8 @@ export function createInput(el) {
     if (lastPointer === 'touch' || lastPointer === 'pen') return;
     try {
       const p = el.requestPointerLock?.({ unadjustedMovement: true });
-      if (p?.catch) p.catch(() => { try { el.requestPointerLock?.(); } catch {} });
-    } catch { try { el.requestPointerLock?.(); } catch {} }
+      if (p?.catch) p.catch(() => { try { el.requestPointerLock?.()?.catch?.(() => {}); } catch {} }); // fallback may reject too (no gesture / iframe)
+    } catch { try { el.requestPointerLock?.()?.catch?.(() => {}); } catch {} }
   };
   el.__lock = lock;
   el.addEventListener('click', lock);

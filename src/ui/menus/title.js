@@ -19,7 +19,7 @@ const CSS = `
   text-transform: uppercase; color: #aeb9d4; padding: 8px 18px 8px 14px; border-left: 3px solid transparent; transition: color .15s, border-color .15s, background .15s; }
 .gs-title button.sel { color: #fff; border-left-color: #e3262f; background: linear-gradient(90deg, rgba(227,38,47,.28), rgba(227,38,47,0)); }
 /* (i18n) language toggle, top corner (inline-end) */
-.gs-title .lang { position: absolute; top: 4.5vh; inset-inline-end: 5vw; display: flex; border: 1px solid rgba(160,180,230,.3); background: rgba(6,12,28,.6); backdrop-filter: blur(6px); }
+.gs-title .lang { position: absolute; top: max(4.5vh, calc(env(safe-area-inset-top, 0px) + 16px)); inset-inline-end: 5vw; display: flex; border: 1px solid rgba(160,180,230,.3); background: rgba(6,12,28,.6); backdrop-filter: blur(6px); }
 .gs-title .lang button { font: 700 14px/1 var(--sys-body, sans-serif); letter-spacing: .12em; padding: 9px 14px; color: #aeb9d4; border: 0; text-transform: none; }
 .gs-title .lang button[data-l=he] { font-family: 'Heebo Variable', var(--sys-body, sans-serif); letter-spacing: 0; }
 .gs-title .lang button.on { background: #e3262f; color: #fff; }
@@ -41,6 +41,14 @@ const CSS = `
 .gs-title .mute.on { background: #e3262f; border-color: #e3262f !important; }
 .gs-title .sndnote { margin-top: 8px; font-size: 12px; color: #7d89a8; }
 @media (max-width: 900px), (max-height: 560px) { .gs-title .panel { right: 3vw; bottom: 3vh; width: min(300px, 44vw); padding: 12px 14px; } }
+/* small / phone screens: the setup panel folds behind a compact toggle so it never covers the menu */
+.gs-title .qs { display: none; position: absolute; top: calc(env(safe-area-inset-top, 0px) + 16px); inset-inline-start: 16px; pointer-events: auto; cursor: pointer;
+  font: 700 13px/1 var(--sys-body, sans-serif); color: #fff; background: rgba(6,12,28,.78); border: 1px solid rgba(160,180,230,.3); padding: 10px 12px; }
+@media (max-width: 760px), (max-height: 520px) {
+  .gs-title .qs { display: block; }
+  .gs-title .panel { display: none; box-sizing: border-box; top: calc(env(safe-area-inset-top, 0px) + 60px); bottom: auto; right: 16px; left: 16px; width: auto; max-height: calc(100% - 80px); overflow-y: auto; z-index: 2; background: rgba(6,12,28,.94); }
+  .gs-title.qs-open .panel { display: block; }
+}
 `;
 
 const TODS = ['day', 'morning', 'sunset', 'dusk', 'night', 'overcast']; // labels: title.tod.<id>
@@ -90,6 +98,7 @@ export function createTitle(sys) {
     </nav>
     <div class="hint" data-i="title.hint"></div>
     <div class="lang interactive" role="group" aria-label="Language / שפה"><button data-l="en" lang="en">EN</button><button data-l="he" lang="he">עב</button></div>
+    <button class="qs interactive" data-i="title.quick"></button>
     <div class="panel interactive">
       <h4 data-i="title.tod"></h4>
       <div class="chips tod">${TODS.map(v => `<button data-v="${v}" data-i="title.tod.${v}"></button>`).join('')}</div>
@@ -104,6 +113,7 @@ export function createTitle(sys) {
     </div>`;
   document.body.appendChild(el);
   const langBtns = [...el.querySelectorAll('.lang button')];
+  el.querySelector('.qs').addEventListener('click', e => { e.stopPropagation(); el.classList.toggle('qs-open'); });
   const labels = () => {
     el.querySelectorAll('[data-i]').forEach(n => { n.textContent = t(n.dataset.i); });
     el.querySelector('.by').innerHTML = t('title.by', { name: `<b>${t('title.author')}</b>` });
