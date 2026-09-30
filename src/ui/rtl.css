@@ -224,6 +224,7 @@ html.lang-he #touch-ui .btn { font: 600 calc(var(--b) * .2)/1 var(--sys-body); }
 html.lang-he #touch-ui .btn.big { font-size: calc(var(--b) * .23); }
 html.lang-he #touch-ui .top .btn { font-size: 12px; }
 html.lang-he #touch-back { font: 700 15px/1 var(--sys-body); }
+html[dir=rtl] #touch-back { right: auto; left: calc(env(safe-area-inset-left, 0px) + 16px); } /* menu header is mirrored in RTL: keep Back over the stats, off the brand */
 html.lang-he #touch-rotate { font: 400 26px/1.3 var(--sys-head); }
 html.lang-he #touch-rotate small { font: 500 15px/1.4 var(--sys-body); }
 

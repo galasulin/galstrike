@@ -244,7 +244,9 @@ export function createMapPage(sys) {
         for (const r of placed) sc += ov(box, r) / 5;
         if (sc < bs) { bs = sc; best = [X, Y, box]; }
       }
-      const [X, Y, box] = best; placed.push(box);
+      const [X, Y, box] = best;
+      if (panels.some(r => ov(box, r) > 0)) { g.restore(); continue; } // (GalStrike) no free spot: hide the name rather than draw it under a panel
+      placed.push(box);
       const Yt = Y - bh * 0.18;
       g.shadowColor = 'rgba(0,6,24,.95)'; g.shadowBlur = 10 * dpr;
       g.fillStyle = 'rgba(255,255,255,.88)'; g.fillText(d.name.toUpperCase(), X, Yt);

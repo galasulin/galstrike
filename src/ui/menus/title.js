@@ -126,7 +126,7 @@ export function createTitle(sys) {
     audio?.sfx?.select?.();
     hide();
     if (a === 'play') { flow.setMode('play'); try { const c = ctx.renderer.domElement; c.__lock ? c.__lock() : c.requestPointerLock?.(); } catch {} }
-    else { flow.setMode('play'); sys.pause.show(a); }
+    else { flow.setMode('play'); try { for (let i = 0; i < 3; i++) ctx.player.update(1 / 60); } catch {} sys.pause.show(a); } // the player never updated under the title screen: pose + place the model before a menu (suit preview) looks at it
   }
   function hide() { active = false; el.classList.remove('on'); setTimeout(() => el.remove(), 650); }
   btns.forEach((b, i) => {
