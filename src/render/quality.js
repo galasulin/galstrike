@@ -30,6 +30,32 @@ const PRESETS = {
   },
 };
 
+// (GalStrike) GPU tier from the renderer string: dedicated GPUs high, mid-range / APUs med, integrated + mobile low
+export function gpuTierFromName(name) {
+  name = String(name || '').toLowerCase();
+  if (/nvidia|geforce|quadro|radeon rx|radeon pro|arc\(tm\) a|intel\(r\) arc a/.test(name)) return 'high';
+  // iPad / iPhone: Safari reports a generic "Apple GPU" (so does Safari on a Mac, told apart by having no touch points)
+  if (/ipad|iphone/.test(name) || (/apple gpu/.test(name) && navigator.maxTouchPoints > 1)) return 'low';
+  if (/apple m\d|radeon|iris xe|arc\(tm\) graphics/.test(name)) return 'med';
+  if (/intel|uhd|hd graphics|iris|mali|adreno|powervr|swiftshader|llvmpipe|basic render/.test(name)) return 'low';
+  return 'high';
+}
+export function gpuName(gl) {
+  try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); return String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)); } catch (e) { return ''; }
+}
+// preset for a load without ?q: the player's manual choice if any, otherwise probe the GPU with a throwaway context
+function bootPreset() {
+  try {
+    const s = JSON.parse(localStorage.getItem('spiderbench.save.v1') || 'null')?.settings;
+    if (s?.qualityManual && PRESETS[s.quality]) return s.quality;
+  } catch (e) { /* no storage */ }
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2', { powerPreference: 'high-performance' });
+    if (!gl) return 'low';
+    const t = gpuTierFromName(gpuName(gl)); gl.getExtension('WEBGL_lose_context')?.loseContext(); return t;
+  } catch (e) { return 'high'; }
+}
+
 let _q = null;
 export function getQuality() {
   if (_q) return _q;
@@ -37,7 +63,8 @@ export function getQuality() {
   try {
     const p = new URLSearchParams(location.search).get('q');
     if (p && PRESETS[p]) name = p;
-    if (p === 'medium') name = 'med';
+    else if (p === 'medium') name = 'med';
+    else name = bootPreset(); // (GalStrike) no ?q: saved manual choice, else the GPU tier (no second load on weak GPUs)
   } catch (e) { /* non-browser */ }
   _q = { ...PRESETS[name] };
   // (perf) ?perfoff disables the perf agent's culling / batching changes (A/B measurements with tools/perf_probe.mjs)

@@ -29,17 +29,9 @@ import { createTitle } from '../../ui/menus/title.js';
 import { createPhotoUI } from '../../ui/menus/photo.js';
 import { createTouch } from '../../ui/touch.js';
 import { t as i18nT, bindSave } from '../../ui/i18n.js';
+import { getQuality, gpuTierFromName, gpuName } from '../../render/quality.js';
 
-function detectGpuTier(renderer) {
-  let name = '';
-  try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); name = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).toLowerCase(); } catch {}
-  if (/nvidia|geforce|quadro|radeon rx|radeon pro|arc\(tm\) a|intel\(r\) arc a/.test(name)) return 'high';
-  // iPad / iPhone: Safari reports a generic "Apple GPU" (so does Safari on a Mac, told apart by having no touch points)
-  if (/ipad|iphone/.test(name) || (/apple gpu/.test(name) && navigator.maxTouchPoints > 1)) return 'low';
-  if (/apple m\d|radeon|iris xe|arc\(tm\) graphics/.test(name)) return 'med';
-  if (/intel|uhd|hd graphics|iris|mali|adreno|powervr|swiftshader|llvmpipe|basic render/.test(name)) return 'low';
-  return 'high';
-}
+function detectGpuTier(renderer) { return gpuTierFromName(gpuName(renderer.getContext())); }
 
 export function initSystems(ctx) {
   if (ctx.sys) return ctx.sys;
@@ -56,12 +48,12 @@ export function initSystems(ctx) {
     if (st.qualityAuto !== tier) {
       st.qualityAuto = tier; st.quality = tier; st.renderScale = tier === 'low' ? 0.8 : 1;
       save.flush();
-      const cur = q.get('q') || 'high';
+      const cur = getQuality().name; // the preset this load actually booted with (render/quality.js already probes the GPU)
       if (cur !== tier) { const u = new URL(location.href); if (tier === 'high') u.searchParams.delete('q'); else u.searchParams.set('q', tier); location.replace(u.toString()); return null; }
     }
   }
   // saved graphics preset (quality is chosen from the URL at boot by render/quality.js)
-  if (save.persistent && !q.has('q') && save.state.settings.quality && save.state.settings.quality !== 'high') {
+  if (save.persistent && !q.has('q') && save.state.settings.quality && save.state.settings.quality !== getQuality().name) {
     const u = new URL(location.href); u.searchParams.set('q', save.state.settings.quality); location.replace(u.toString()); return null;
   }
   ctx.events = events;
